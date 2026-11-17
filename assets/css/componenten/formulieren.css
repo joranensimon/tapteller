@@ -4,11 +4,9 @@
 }
 
 .veld__label {
-  color: var(--tekst-zacht);
-  font-size: var(--tekst-xs);
+  color: var(--tekst);
+  font-size: var(--tekst-s);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .veld__hulp {
@@ -20,13 +18,14 @@
 .keuze,
 .tekstvak {
   width: 100%;
-  min-height: 44px;
+  min-height: 40px;
   padding: 0 var(--ruimte-3);
   border: 1px solid var(--lijn-sterk);
   border-radius: var(--straal);
   background: var(--verhoogd);
   color: var(--tekst);
-  font-size: var(--tekst-m);
+  font-size: var(--tekst-s);
+  box-shadow: var(--schaduw-kaart);
   transition: border-color var(--tijd);
 }
 
@@ -46,7 +45,7 @@
 }
 
 .invoer--compact {
-  min-height: 40px;
+  min-height: 36px;
   padding: 0 var(--ruimte-2);
   font-size: var(--tekst-s);
 }
@@ -85,3 +84,6 @@
 }
 .rij > .invoer,
 .rij > .keuze { flex: 1; min-width: 0; }
+
+.rij--onder { align-items: flex-end; }
+.rij--onder > .veld { flex: 1; min-width: 6rem; }

@@ -1,0 +1,80 @@
+/* Overzicht: raster, klassement, activiteit */
+
+.raster-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ruimte-4);
+}
+.raster-2 > .kaart + .kaart { margin-top: 0; }
+
+.rangen { display: grid; margin: 0; padding: var(--ruimte-2) var(--ruimte-5) var(--ruimte-4); list-style: none; }
+
+.rang {
+  display: flex;
+  align-items: center;
+  gap: var(--ruimte-3);
+  padding: var(--ruimte-2) 0;
+}
+
+.rang__nr {
+  width: 1.25rem;
+  color: var(--tekst-vaag);
+  font-size: var(--tekst-s);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.rang--eerste .rang__nr { color: var(--merk); font-weight: 700; }
+
+.rang__midden { flex: 1; min-width: 0; }
+.rang__naam { overflow: hidden; font-size: var(--tekst-s); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.rang__punten { font-size: var(--tekst-s); font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.balkje {
+  height: 6px;
+  margin-top: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--vlak-hover);
+}
+.balkje__vul {
+  width: var(--aandeel, 0%);
+  height: 100%;
+  border-radius: 3px;
+  background: var(--merk);
+  transition: width 500ms var(--ease);
+}
+.balkje__vul--donker { background: var(--tekst-vaag); }
+
+.activiteit { margin: 0; padding: 0; list-style: none; }
+
+.activiteit__rij {
+  display: flex;
+  align-items: center;
+  gap: var(--ruimte-3);
+  padding: var(--ruimte-3) var(--ruimte-5);
+  border-bottom: 1px solid var(--lijn);
+}
+.activiteit__rij:last-child { border-bottom: 0; }
+
+.activiteit__tijd { width: 3rem; color: var(--tekst-vaag); font-size: var(--tekst-xs); font-variant-numeric: tabular-nums; }
+.activiteit__midden { flex: 1; min-width: 0; }
+.activiteit__titel { font-size: var(--tekst-s); font-weight: 600; }
+.activiteit__detail { overflow: hidden; color: var(--tekst-zacht); font-size: var(--tekst-xs); text-overflow: ellipsis; white-space: nowrap; }
+
+.acties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ruimte-3); padding: var(--ruimte-4) var(--ruimte-5) var(--ruimte-5); }
+.acties .knop { justify-content: flex-start; }
+
+@media (max-width: 70rem) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 56rem) {
+  .raster-2 { grid-template-columns: 1fr; }
+  .kpis--drie { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ruimte-2); }
+  .kpis--drie .kpi { padding: var(--ruimte-3); }
+  .kpi__waarde { font-size: var(--tekst-xl); }
+  .kpi__sub { white-space: normal; }
+  .kaart__kop { padding-inline: var(--ruimte-4); }
+  .rangen, .activiteit__rij { padding-inline: var(--ruimte-4); }
+  .acties { padding-inline: var(--ruimte-4); }
+}

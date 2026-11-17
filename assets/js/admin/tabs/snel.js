@@ -14,6 +14,10 @@ const geschiedenis = []; // laatste tikken op dit toestel, voor "Ongedaan maken"
 export const snel = {
   id: "snel",
   label: () => "Snel tellen",
+  kort: () => "Tellen",
+  icoon: "snel",
+  sectie: "bar",
+  uitleg: () => "Eén tik per consumptie, zonder drankkaart.",
   watch: ["groepen", "instellingen"],
 
   render(wortel, ctx) {

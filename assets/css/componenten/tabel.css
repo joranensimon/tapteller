@@ -1,0 +1,50 @@
+/* Gegevenstabel */
+
+.tabel-wikkel { overflow-x: auto; }
+
+.tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--tekst-s);
+}
+
+.tabel th {
+  padding: var(--ruimte-2) var(--ruimte-4);
+  border-bottom: 1px solid var(--lijn);
+  background: var(--vlak-zacht);
+  color: var(--tekst-zacht);
+  font-size: var(--tekst-xs);
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.tabel td {
+  padding: var(--ruimte-3) var(--ruimte-4);
+  border-bottom: 1px solid var(--lijn);
+  vertical-align: middle;
+}
+
+.tabel tbody tr:last-child td { border-bottom: 0; }
+.tabel tbody tr:hover td { background: var(--vlak-zacht); }
+
+.tabel__getal { text-align: right !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabel__tijd { color: var(--tekst-zacht); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tabel__door { color: var(--tekst-zacht); }
+.tabel__actie { width: 1%; text-align: right; white-space: nowrap; }
+
+.tabel__rij--vervallen td:not(.tabel__actie):not(:nth-child(6)) { opacity: 0.55; }
+.tabel__rij--vervallen .cel-groep__naam { text-decoration: line-through; }
+
+.cel-groep { display: flex; align-items: center; gap: var(--ruimte-3); min-width: 12rem; }
+.cel-groep .avatar { --afmeting: 32px; }
+.cel-groep__tekst { min-width: 0; }
+.cel-groep__naam { font-weight: 600; }
+.cel-groep__detail { color: var(--tekst-zacht); font-size: var(--tekst-xs); }
+
+@media (max-width: 56rem) {
+  .tabel__door,
+  .tabel__status { display: none; }
+  .tabel th,
+  .tabel td { padding-inline: var(--ruimte-3); }
+}

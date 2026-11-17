@@ -52,8 +52,7 @@
   color: var(--tekst-zacht);
   font-size: clamp(0.8rem, 1.3vw, 1.25rem);
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .merk__titel {
@@ -82,8 +81,7 @@
 .totaal__label {
   color: var(--tekst-zacht);
   font-size: clamp(0.75rem, 1.2vw, 1.15rem);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 /* Grafiek ------------------------------------------------------------ */

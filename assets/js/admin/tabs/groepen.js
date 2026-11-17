@@ -16,6 +16,11 @@ import { meldFout } from "../fouten.js";
 export const groepenTab = {
   id: "groepen",
   label: () => woorden().meervoud,
+  kort: () => (woorden().meervoud.length > 8 ? "Groepen" : woorden().meervoud),
+  icoon: "groepen",
+  sectie: "beheer",
+  uitleg: () => `Foto, gif en naam van elke ${woorden().enkelvoud.toLowerCase()}.`,
+  breed: true,
   watch: ["groepen", "gifs", "instellingen"],
   beschermInvoer: true,
 
@@ -37,8 +42,7 @@ export const groepenTab = {
     naamVeld.addEventListener("keydown", (e) => e.key === "Enter" && toevoegen());
 
     wortel.append(
-      h("section", { class: "sectie" },
-        h("div", { class: "sectie__kop" }, h("h2", { class: "sectie__titel", tekst: w.meervoud })),
+      h("section", { class: "kaart kaart--toevoegen" },
         h("div", { class: "rij" }, naamVeld, h("button", { class: "knop knop--primair", type: "button", tekst: "Toevoegen", onclick: toevoegen })),
       ),
     );
@@ -47,7 +51,7 @@ export const groepenTab = {
     if (!lijst.length) {
       wortel.append(h("p", { class: "paneel paneel--leeg", tekst: `Nog geen ${w.meervoud.toLowerCase()}.` }));
     }
-    for (const groep of lijst) wortel.append(groepKaart(groep, ctx));
+    wortel.append(h("div", { class: "raster-groepen" }, lijst.map((groep) => groepKaart(groep, ctx))));
 
     wortel.append(h("p", { class: "notitie sectie", tekst: "De gif verschijnt groot op de beamer telkens als de groep punten krijgt." }));
   },

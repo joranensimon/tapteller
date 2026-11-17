@@ -1,6 +1,6 @@
 .meldingen {
   position: fixed;
-  inset: auto var(--ruimte-3) calc(var(--balk-hoogte, 0px) + var(--ruimte-4) + env(safe-area-inset-bottom, 0px));
+  inset: auto var(--ruimte-3) calc(var(--nav-onder, 0px) + var(--balk-hoogte, 0px) + var(--ruimte-4) + env(safe-area-inset-bottom, 0px));
   z-index: 60;
   display: grid;
   justify-items: center;

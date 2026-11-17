@@ -17,6 +17,10 @@ let mand = {}; // drank-id → aantal
 export const kassa = {
   id: "kassa",
   label: () => "Kassa",
+  icoon: "kassa",
+  sectie: "bar",
+  uitleg: () => `Kies ${woorden().welk} ${woorden().enkelvoud.toLowerCase()}, tik de dranken aan en reken af.`,
+  breed: true,
   watch: ["groepen", "kaart", "instellingen"],
 
   render(wortel, ctx) {

@@ -4,29 +4,39 @@
    ========================================================================== */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
   --lettertype: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   /* Vlakken en lijnen */
-  --achtergrond: #0b0d11;
-  --verhoogd: #11151b;
-  --vlak: #151a21;
-  --vlak-hover: #1b212a;
-  --lijn: #232a35;
-  --lijn-sterk: #343d4c;
+  --achtergrond: #f4f5f7;
+  --verhoogd: #ffffff;
+  --vlak: #ffffff;
+  --vlak-hover: #f2f4f7;
+  --vlak-zacht: #f9fafb;
+  --lijn: #e4e7ec;
+  --lijn-sterk: #d0d5dd;
+  --zijbalk: #ffffff;
 
   /* Tekst */
-  --tekst: #e8ecf2;
-  --tekst-zacht: #9aa4b5;
-  --tekst-vaag: #6a7486;
+  --tekst: #101828;
+  --tekst-zacht: #475467;
+  --tekst-vaag: #667085;
 
-  /* Merk en status */
-  --merk: #e0a63c;
-  --merk-hover: #eab656;
-  --merk-tekst: #17120a;
-  --gevaar: #f2705f;
-  --succes: #46c37b;
+  /* Merk (bierkleur) en hoofdknop (inkt) */
+  --merk: #c27803;
+  --merk-hover: #a86600;
+  --merk-tekst: #ffffff;
+  --merk-zacht: #fdf3dc;
+  --primair: #101828;
+  --primair-hover: #263248;
+  --primair-tekst: #ffffff;
+
+  /* Status */
+  --gevaar: #c0392b;
+  --gevaar-zacht: #fdeceb;
+  --succes: #1a7f4b;
+  --succes-zacht: #e4f5ec;
 
   /* Geluidsmeter op het scherm */
   --meter-groen: #2fbf71;
@@ -52,50 +62,73 @@
 
   /* Vormen en beweging */
   --straal-s: 6px;
-  --straal: 10px;
-  --straal-l: 16px;
-  --schaduw-pop: 0 18px 48px rgb(0 0 0 / 0.5);
+  --straal: 8px;
+  --straal-l: 12px;
+  --schaduw-kaart: 0 1px 2px rgb(16 24 40 / 0.05);
+  --schaduw-pop: 0 16px 40px rgb(16 24 40 / 0.18);
   --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
-  --tijd: 160ms;
+  --tijd: 140ms;
+
+  /* Kader van de beheer-app */
+  --zijbalk-breedte: 15.5rem;
+  --navbalk-hoogte: 3.75rem;
 }
 
-/* Lichte weergave: volgt het systeem, tenzij data-thema is ingesteld. */
-@media (prefers-color-scheme: light) {
+/* Donkere weergave: volgt het systeem, tenzij data-thema is ingesteld. De beamer is altijd donker. */
+@media (prefers-color-scheme: dark) {
   :root:not([data-thema]) {
-    color-scheme: light;
-    --achtergrond: #f4f3ef;
-    --verhoogd: #ffffff;
-    --vlak: #ffffff;
-    --vlak-hover: #f0efea;
-    --lijn: #e3e1da;
-    --lijn-sterk: #cbc8be;
-    --tekst: #14181f;
-    --tekst-zacht: #566073;
-    --tekst-vaag: #818a9b;
-    --merk: #b9780a;
-    --merk-hover: #a46a07;
-    --merk-tekst: #ffffff;
-    --gevaar: #c93a29;
-    --succes: #1e8f52;
-    --schaduw-pop: 0 18px 48px rgb(20 24 31 / 0.18);
+    color-scheme: dark;
+    --achtergrond: #0b0d11;
+    --verhoogd: #14181f;
+    --vlak: #12161c;
+    --vlak-hover: #1a1f27;
+    --vlak-zacht: #0f1318;
+    --lijn: #232a35;
+    --lijn-sterk: #343d4c;
+    --zijbalk: #0f1318;
+    --tekst: #e8ecf2;
+    --tekst-zacht: #9aa4b5;
+    --tekst-vaag: #7a8496;
+    --merk: #e0a63c;
+    --merk-hover: #eab656;
+    --merk-tekst: #17120a;
+    --merk-zacht: #2a2111;
+    --primair: #e8ecf2;
+    --primair-hover: #ffffff;
+    --primair-tekst: #0b0d11;
+    --gevaar: #f2705f;
+    --gevaar-zacht: #2c1714;
+    --succes: #46c37b;
+    --succes-zacht: #10241a;
+    --schaduw-kaart: none;
+    --schaduw-pop: 0 18px 48px rgb(0 0 0 / 0.55);
   }
 }
 
-:root[data-thema="light"] {
-  color-scheme: light;
-  --achtergrond: #f4f3ef;
-  --verhoogd: #ffffff;
-  --vlak: #ffffff;
-  --vlak-hover: #f0efea;
-  --lijn: #e3e1da;
-  --lijn-sterk: #cbc8be;
-  --tekst: #14181f;
-  --tekst-zacht: #566073;
-  --tekst-vaag: #818a9b;
-  --merk: #b9780a;
-  --merk-hover: #a46a07;
-  --merk-tekst: #ffffff;
-  --gevaar: #c93a29;
-  --succes: #1e8f52;
-  --schaduw-pop: 0 18px 48px rgb(20 24 31 / 0.18);
+:root[data-thema="dark"] {
+  color-scheme: dark;
+  --achtergrond: #0b0d11;
+  --verhoogd: #14181f;
+  --vlak: #12161c;
+  --vlak-hover: #1a1f27;
+  --vlak-zacht: #0f1318;
+  --lijn: #232a35;
+  --lijn-sterk: #343d4c;
+  --zijbalk: #0f1318;
+  --tekst: #e8ecf2;
+  --tekst-zacht: #9aa4b5;
+  --tekst-vaag: #7a8496;
+  --merk: #e0a63c;
+  --merk-hover: #eab656;
+  --merk-tekst: #17120a;
+  --merk-zacht: #2a2111;
+  --primair: #e8ecf2;
+  --primair-hover: #ffffff;
+  --primair-tekst: #0b0d11;
+  --gevaar: #f2705f;
+  --gevaar-zacht: #2c1714;
+  --succes: #46c37b;
+  --succes-zacht: #10241a;
+  --schaduw-kaart: none;
+  --schaduw-pop: 0 18px 48px rgb(0 0 0 / 0.55);
 }

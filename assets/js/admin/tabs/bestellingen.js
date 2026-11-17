@@ -1,93 +1,117 @@
-/** Overzicht van bestellingen, verkoop per drank, annuleren en exporteren. */
+/** Bestellingen: cijfers, filter, tabel met annuleren en export. */
 import { h } from "../../lib/dom.js";
 import { bonnetjes, getal, klok } from "../../lib/opmaak.js";
 import { bestellingenNaarCsv } from "../../lib/csv.js";
 import { downloadTekst } from "../../lib/download.js";
 import { icoon } from "../../lib/iconen.js";
+import { avatar } from "../../componenten/avatar.js";
 import { bevestig } from "../../componenten/dialoog.js";
 import { toast } from "../../componenten/toast.js";
 import { annuleerBestelling } from "../../data/schrijven.js";
-import { bestellingen as alleBestellingen, woorden } from "../selectors.js";
+import { bestellingen as alleBestellingen, groepen, woorden } from "../selectors.js";
 import { state } from "../state.js";
 import { meldFout } from "../fouten.js";
 
-const TOON_MAX = 60;
+const TOON_MAX = 100;
+
+let filterGroep = ""; // "" = alle
+let toonGeannuleerd = true;
 
 export const bestellingenTab = {
   id: "bestellingen",
   label: () => "Bestellingen",
-  watch: ["bestellingen", "instellingen"],
+  kort: () => "Orders",
+  icoon: "bestellingen",
+  sectie: "bar",
+  uitleg: () => "Alle bestellingen, met annuleren en export.",
+  breed: true,
+  watch: ["bestellingen", "instellingen", "groepen"],
 
-  render(wortel) {
-    const lijst = alleBestellingen();
-    const geldig = lijst.filter((b) => !b.geannuleerd);
-    const totaalBonnetjes = geldig.reduce((som, b) => som + (b.bonnetjes || 0), 0);
+  render(wortel, ctx) {
+    const w = woorden();
+    const alles = alleBestellingen();
+    if (filterGroep && !state.groepen[filterGroep]) filterGroep = "";
+
+    const geldig = alles.filter((b) => !b.geannuleerd);
+    const geannuleerd = alles.length - geldig.length;
+    const lijst = alles.filter((b) => (!filterGroep || b.groep === filterGroep) && (toonGeannuleerd || !b.geannuleerd));
 
     wortel.append(
-      h("section", { class: "sectie" },
-        h("div", { class: "sectie__kop" }, h("h2", { class: "sectie__titel", tekst: "Overzicht" })),
-        h("div", { class: "paneel stapel" },
-          h("dl", { class: "kenmerken" },
-            h("div", { class: "kenmerken__rij" }, h("dt", { tekst: "Bestellingen" }), h("dd", { tekst: geldig.length })),
-            h("div", { class: "kenmerken__rij" }, h("dt", { tekst: "Bonnetjes in totaal" }), h("dd", { tekst: getal(totaalBonnetjes) })),
-          ),
-          h("button", {
-            class: "knop knop--klein",
-            type: "button",
-            disabled: !lijst.length,
-            onclick: () => exporteer(lijst),
-          }, icoon("download"), "Exporteer voor Excel (CSV)"),
-        ),
+      h("div", { class: "kpis kpis--drie" },
+        kpi("Bestellingen", getal(geldig.length)),
+        kpi("Bonnetjes in totaal", getal(geldig.reduce((s, b) => s + (b.bonnetjes || 0), 0))),
+        kpi("Geannuleerd", getal(geannuleerd)),
       ),
     );
 
-    const perDrank = verkoopPerDrank(geldig);
-    if (perDrank.length) {
-      wortel.append(
-        h("section", { class: "sectie" },
-          h("div", { class: "sectie__kop" }, h("h2", { class: "sectie__titel", tekst: "Verkocht per drank" })),
-          h("dl", { class: "paneel kenmerken" },
-            perDrank.map(([naam, aantal]) => h("div", { class: "kenmerken__rij" }, h("dt", { tekst: naam }), h("dd", { tekst: `${aantal}×` }))),
-          ),
-        ),
-      );
-    }
+    const groepKeuze = h("select", { class: "keuze keuze--compact", "aria-label": `Filter op ${w.enkelvoud.toLowerCase()}` },
+      h("option", { value: "", tekst: `Alle ${w.meervoud.toLowerCase()}` }),
+      groepen().map((g) => h("option", { value: g.id, selected: g.id === filterGroep, tekst: g.naam })),
+    );
+    groepKeuze.addEventListener("change", () => { filterGroep = groepKeuze.value; ctx.herteken(); });
+
+    const vink = h("input", { class: "vink", type: "checkbox", checked: toonGeannuleerd, id: "toon-geannuleerd" });
+    vink.addEventListener("change", () => { toonGeannuleerd = vink.checked; ctx.herteken(); });
 
     wortel.append(
-      h("section", { class: "sectie" },
-        h("div", { class: "sectie__kop" }, h("h2", { class: "sectie__titel", tekst: "Laatste bestellingen" })),
-        lijst.length
-          ? h("div", { class: "paneel lijst" },
-              lijst.slice(0, TOON_MAX).map(rij),
-              lijst.length > TOON_MAX && h("p", { class: "notitie", tekst: `En nog ${lijst.length - TOON_MAX} oudere. Exporteer voor de volledige lijst.` }),
-            )
-          : h("p", { class: "paneel paneel--leeg", tekst: "Nog geen bestellingen." }),
+      h("section", { class: "kaart kaart--tabel" },
+        h("div", { class: "gereedschap" },
+          groepKeuze,
+          h("label", { class: "vinklabel", for: "toon-geannuleerd" }, vink, "Toon geannuleerde"),
+          h("span", { class: "gereedschap__rest" }),
+          h("button", { class: "knop knop--klein", type: "button", disabled: !alles.length, onclick: () => exporteer(alles) }, icoon("download"), "Exporteer CSV"),
+        ),
+        lijst.length ? tabel(lijst) : h("p", { class: "leeg leeg--tabel", tekst: alles.length ? "Geen bestellingen met deze filter." : "Nog geen bestellingen." }),
+        lijst.length > TOON_MAX && h("p", { class: "notitie notitie--voet", tekst: `Eerste ${TOON_MAX} van ${lijst.length} getoond. Exporteer voor de volledige lijst.` }),
       ),
     );
   },
 };
 
-function verkoopPerDrank(bestellingen) {
-  const totalen = new Map();
-  for (const b of bestellingen) {
-    for (const regel of Object.values(b.items ?? {})) totalen.set(regel.naam, (totalen.get(regel.naam) || 0) + (regel.aantal || 0));
-  }
-  return [...totalen].sort((a, b) => b[1] - a[1]);
+function kpi(label, waarde) {
+  return h("div", { class: "kpi" }, h("p", { class: "kpi__label", tekst: label }), h("p", { class: "kpi__waarde", tekst: waarde }));
+}
+
+function tabel(lijst) {
+  return h("div", { class: "tabel-wikkel" },
+    h("table", { class: "tabel" },
+      h("thead", {}, h("tr", {},
+        h("th", { scope: "col", tekst: "Tijd" }),
+        h("th", { scope: "col", tekst: "Bestelling" }),
+        h("th", { class: "tabel__getal", scope: "col", tekst: "Bonnetjes" }),
+        h("th", { class: "tabel__getal", scope: "col", tekst: "Punten" }),
+        h("th", { class: "tabel__door", scope: "col", tekst: "Door" }),
+        h("th", { class: "tabel__status", scope: "col", tekst: "Status" }),
+        h("th", { class: "tabel__actie", scope: "col" }, h("span", { class: "verborgen", tekst: "Acties" })),
+      )),
+      h("tbody", {}, lijst.slice(0, TOON_MAX).map(rij)),
+    ),
+  );
 }
 
 function rij(b) {
   const wat = Object.values(b.items ?? {}).map((i) => `${i.aantal}× ${i.naam}`).join(", ");
   const door = (b.door || "").split("@")[0];
+  const groep = state.groepen[b.groep];
 
-  return h(
-    "div",
-    { class: `lijst__rij${b.geannuleerd ? " lijst__rij--vervallen" : ""}` },
-    h("div", { class: "lijst__inhoud" },
-      h("p", { class: "lijst__titel", tekst: `${klok(b.t)} · ${b.groepNaam || "?"}` }),
-      h("p", { class: "lijst__detail", tekst: wat }),
-      h("p", { class: "lijst__detail", tekst: `${bonnetjes(b.bonnetjes)} · ${getal(b.punten)} punten · ${door}${b.geannuleerd ? " · geannuleerd" : ""}` }),
+  return h("tr", { class: b.geannuleerd ? "tabel__rij--vervallen" : "" },
+    h("td", { class: "tabel__tijd", tekst: klok(b.t) }),
+    h("td", {},
+      h("div", { class: "cel-groep" },
+        avatar(groep?.foto, { naam: b.groepNaam }),
+        h("div", { class: "cel-groep__tekst" },
+          h("p", { class: "cel-groep__naam", tekst: b.groepNaam || "?" }),
+          h("p", { class: "cel-groep__detail", tekst: wat }),
+        ),
+      ),
     ),
-    !b.geannuleerd && h("button", { class: "knop knop--klein knop--gevaar", type: "button", tekst: "Annuleer", onclick: () => annuleer(b) }),
+    h("td", { class: "tabel__getal", tekst: getal(b.bonnetjes) }),
+    h("td", { class: "tabel__getal", tekst: getal(b.punten) }),
+    h("td", { class: "tabel__door", tekst: door }),
+    h("td", { class: "tabel__status" }, h("span", { class: `badge ${b.geannuleerd ? "badge--neutraal" : "badge--succes"}`, tekst: b.geannuleerd ? "Geannuleerd" : "Afgerekend" })),
+    h("td", { class: "tabel__actie" },
+      !b.geannuleerd && h("button", { class: "knop knop--klein knop--spook knop--gevaar", type: "button", tekst: "Annuleer", onclick: () => annuleer(b) }),
+    ),
   );
 }
 

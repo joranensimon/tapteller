@@ -84,7 +84,7 @@ try {
     assert.equal(await pagina.textContent("#evenementnaam"), "Quiz Jeugdhuis");
     stap("beheerder komt in de app, met de naam van het evenement");
 
-    await pagina.click("#uitloggen");
+    await pagina.click("[data-uitloggen]:visible");
     await pagina.waitForSelector("#inlogformulier");
     await pagina.fill("#email", "iemand@test.be");
     await pagina.fill("#wachtwoord", "goed");
@@ -104,7 +104,7 @@ try {
       { viewport: { width: 390, height: 844 }, colorScheme: "dark" },
       { zaad: ZAAD, gebruiker: { email: "beheer@test.be", uid: "u1" } },
     );
-    await pagina.goto(`${basis}/admin.html`);
+    await pagina.goto(`${basis}/admin.html#kassa`);
     await pagina.waitForSelector(".tegel");
     assert.equal((await pagina.$$(".tegel")).length, 3);
     await pagina.screenshot({ path: UITVOER + "02-kassa-groepen.png" });
@@ -161,7 +161,7 @@ try {
 
     // Bestelling annuleren
     await pagina.click("#tab-bestellingen");
-    await pagina.click(".lijst__rij button:has-text('Annuleer')");
+    await pagina.click("tbody tr button:has-text('Annuleer')");
     await pagina.click("dialog[open] button[value=ok]");
     await pagina.waitForFunction(() => window.__mockTree.groepen.b.aantal === 4);
     await pagina.screenshot({ path: UITVOER + "08-bestellingen.png", fullPage: true });
@@ -180,13 +180,62 @@ try {
     await pagina.emulateMedia({ colorScheme: "light" });
     await pagina.click("#tab-kassa");
     await pagina.waitForSelector(".tegel");
-    assert.equal(await pagina.evaluate(() => getComputedStyle(document.body).backgroundColor), "rgb(244, 243, 239)");
+    assert.equal(await pagina.evaluate(() => getComputedStyle(document.body).backgroundColor), "rgb(244, 245, 247)");
     await pagina.screenshot({ path: UITVOER + "10-licht.png" });
     stap("lichte weergave volgt het systeem");
 
     assert.deepEqual(problemen, [], "console- of CSP-fouten in de beheerpagina");
     stap("geen console- of CSP-fouten (dus ook geen inline CSS)");
     await context.close();
+  }
+
+  /* ------------------------------------------------------------------ desktop */
+  console.log("Beheer op desktop");
+  {
+    const nu = Date.now();
+    const zaad = {
+      ...ZAAD,
+      groepen: { a: { naam: "KSA", aantal: 40, t: 1 }, b: { naam: "KLJ", aantal: 25, t: 2 }, c: { naam: "Scouts Merchtem", aantal: 55, t: 3 } },
+      kaart: { k1: { naam: "Pils", prijs: 1, punten: 1, telt: true, v: 0 }, k2: { naam: "Streekbier", prijs: 2, punten: 2, telt: true, v: 1 } },
+      bestellingen: {
+        o1: { groep: "c", groepNaam: "Scouts Merchtem", items: { k1: { naam: "Pils", aantal: 4 } }, bonnetjes: 4, punten: 4, t: nu - 60000, door: "beheer@test.be" },
+        o2: { groep: "a", groepNaam: "KSA", items: { k2: { naam: "Streekbier", aantal: 2 }, k1: { naam: "Pils", aantal: 1 } }, bonnetjes: 5, punten: 5, t: nu - 600000, door: "beheer@test.be" },
+        o3: { groep: "b", groepNaam: "KLJ", items: { k1: { naam: "Pils", aantal: 3 } }, bonnetjes: 3, punten: 3, t: nu - 900000, door: "beheer@test.be", geannuleerd: true },
+      },
+    };
+    for (const schema of ["light", "dark"]) {
+      const { pagina, problemen, context } = await nieuwePagina({ viewport: { width: 1440, height: 900 }, colorScheme: schema }, { zaad, gebruiker: { email: "beheer@test.be", uid: "u1" } });
+      await pagina.goto(`${basis}/admin.html`);
+      await pagina.waitForSelector(".kpis");
+      await pagina.waitForTimeout(700);
+      for (const id of ["overzicht", "kassa", "bestellingen", "groepen", "kaart", "instellingen"]) {
+        await pagina.click(`#tab-${id}`);
+        if (id === "kassa") await pagina.click(".tegel:has-text('KSA')");
+        await pagina.waitForTimeout(250);
+        await pagina.screenshot({ path: `${UITVOER}d-${schema}-${id}.png` });
+      }
+      assert.deepEqual(problemen, [], "console- of CSP-fouten op desktop");
+      await context.close();
+    }
+    const { pagina, context } = await nieuwePagina({ viewport: { width: 1440, height: 900 }, colorScheme: "light" }, {});
+    await pagina.goto(`${basis}/admin.html`);
+    await pagina.waitForSelector("#inlogformulier");
+    await pagina.screenshot({ path: UITVOER + "d-inloggen.png" });
+    await context.close();
+    stap("desktop-weergaven (licht en donker) zonder fouten");
+
+    const mobiel = await nieuwePagina({ viewport: { width: 390, height: 844 }, colorScheme: "light" }, { zaad, gebruiker: { email: "beheer@test.be", uid: "u1" } });
+    await mobiel.pagina.goto(`${basis}/admin.html`);
+    await mobiel.pagina.waitForSelector(".kpis");
+    await mobiel.pagina.waitForTimeout(700);
+    for (const id of ["overzicht", "bestellingen", "groepen", "kaart"]) {
+      await mobiel.pagina.click(`#tab-${id}`);
+      await mobiel.pagina.waitForTimeout(250);
+      await mobiel.pagina.screenshot({ path: `${UITVOER}m-${id}.png` });
+    }
+    assert.deepEqual(mobiel.problemen, [], "console- of CSP-fouten op gsm");
+    await mobiel.context.close();
+    stap("gsm-weergaven zonder fouten");
   }
 
   /* ------------------------------------------------------------------ beamer */

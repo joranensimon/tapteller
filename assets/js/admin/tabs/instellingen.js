@@ -16,17 +16,21 @@ import { meldFout } from "../fouten.js";
 export const instellingenTab = {
   id: "instellingen",
   label: () => "Instellingen",
+  kort: () => "Opties",
+  icoon: "instellingen",
+  sectie: "beheer",
+  uitleg: () => "Evenement, puntentelling, logo en opnieuw beginnen.",
+  breed: true,
   watch: ["instellingen", "groepen"],
   beschermInvoer: true,
 
   render(wortel, ctx) {
     const instellingen = state.instellingen;
     wortel.append(
-      schermLink(),
-      puntentelling(),
-      algemeen(instellingen),
-      logo(instellingen.logo),
-      opnieuwBeginnen(),
+      h("div", { class: "raster-instellingen" },
+        h("div", { class: "raster-instellingen__kolom" }, algemeen(instellingen), puntentelling(), schermLink()),
+        h("div", { class: "raster-instellingen__kolom" }, logo(instellingen.logo), opnieuwBeginnen()),
+      ),
       h("p", { class: "versie", tekst: `${APP.naam} ${APP.versie}` }),
     );
   },

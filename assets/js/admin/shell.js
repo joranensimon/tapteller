@@ -1,13 +1,16 @@
-/** De beheer-app: navigatie, tabbladen en de balk onderaan. */
+/** De beheer-app: zijbalk, paginakop, inhoud en de balk onderaan. */
 import { h, leeg } from "../lib/dom.js";
+import { icoon } from "../lib/iconen.js";
 import { abonneer } from "./state.js";
-import { naar, startRouter } from "./router.js";
-import { TABS } from "./tabs/index.js";
+import { startRouter } from "./router.js";
+import { SECTIES, TABS } from "./tabs/index.js";
 
 const $nav = document.getElementById("tabs");
 const $inhoud = document.getElementById("inhoud");
 const $balk = document.getElementById("mand");
 const $app = document.getElementById("weergave-app");
+const $titel = document.getElementById("paginatitel");
+const $uitleg = document.getElementById("paginauitleg");
 
 let actief = null;
 let gestart = false;
@@ -31,39 +34,40 @@ new ResizeObserver(() => document.documentElement.style.setProperty("--balk-hoog
 const ctx = { voet, herteken: () => teken(true) };
 
 function bouwNavigatie() {
-  for (const tab of TABS) {
+  for (const sectie of SECTIES) {
+    const tabs = TABS.filter((t) => t.sectie === sectie.id);
+    if (!tabs.length) continue;
     $nav.append(
-      h("button", {
-        class: "tab",
-        type: "button",
-        role: "tab",
-        id: `tab-${tab.id}`,
-        "aria-controls": "inhoud",
-        data: { tab: tab.id },
-        onclick: () => naar(tab.id),
-      }),
+      h("div", { class: "nav__groep", role: "group", "aria-label": sectie.titel },
+        h("p", { class: "nav__titel", tekst: sectie.titel }),
+        tabs.map((tab) =>
+          h("a", { class: "nav__link", id: `tab-${tab.id}`, href: `#${tab.id}`, data: { tab: tab.id } },
+            icoon(tab.icoon),
+            h("span", { class: "nav__label" }),
+            h("span", { class: "nav__kort" }),
+          ),
+        ),
+      ),
     );
   }
-
-  // Pijltjestoetsen binnen de tabbalk
-  $nav.addEventListener("keydown", (e) => {
-    const richting = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
-    if (!richting) return;
-    const index = TABS.findIndex((t) => t.id === actief?.id);
-    const volgende = TABS[(index + richting + TABS.length) % TABS.length];
-    naar(volgende.id);
-    document.getElementById(`tab-${volgende.id}`)?.focus();
-  });
 }
 
 function verfrisNavigatie() {
-  for (const knop of $nav.children) {
-    const tab = TABS.find((t) => t.id === knop.dataset.tab);
-    knop.textContent = tab.label();
-    knop.setAttribute("aria-selected", String(tab === actief));
-    knop.tabIndex = tab === actief ? 0 : -1;
-    if (tab === actief) knop.scrollIntoView?.({ inline: "center", block: "nearest" });
+  for (const link of $nav.querySelectorAll(".nav__link")) {
+    const tab = TABS.find((t) => t.id === link.dataset.tab);
+    link.querySelector(".nav__label").textContent = tab.label();
+    link.querySelector(".nav__kort").textContent = tab.kort?.() ?? tab.label();
+    if (tab === actief) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
   }
+}
+
+function verfrisKop() {
+  if (!actief) return;
+  $titel.textContent = actief.label();
+  $uitleg.textContent = actief.uitleg?.() ?? "";
+  $uitleg.hidden = !$uitleg.textContent;
+  $inhoud.classList.toggle("app__inhoud--smal", !actief.breed);
 }
 
 const typtNu = () => {
@@ -79,6 +83,7 @@ function teken(geforceerd) {
   leeg($inhoud);
   actief.render($inhoud, ctx);
   verfrisNavigatie();
+  verfrisKop();
 }
 
 function toonTab(id) {
@@ -97,7 +102,10 @@ export function startShell() {
 
   abonneer((sleutels) => {
     if (!actief) return;
-    if (sleutels.includes("instellingen")) verfrisNavigatie();
+    if (sleutels.includes("instellingen")) {
+      verfrisNavigatie();
+      verfrisKop();
+    }
     if (actief.watch.some((s) => sleutels.includes(s))) teken(false);
   });
 }

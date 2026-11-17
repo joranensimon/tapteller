@@ -19,37 +19,72 @@
 
   <p class="laden" id="weergave-laden">Laden…</p>
 
-  <main class="inloggen" id="weergave-inloggen" hidden>
-    <img class="inloggen__merk" src="assets/img/merk.svg" alt="">
-    <h1 class="inloggen__titel">Tapteller</h1>
-    <p class="inloggen__uitleg">Log in als beheerder om te tellen en te beheren.</p>
-
-    <form class="formulier" id="inlogformulier">
-      <div class="veld">
-        <label class="veld__label" for="email">E-mailadres</label>
-        <input class="invoer" id="email" name="email" type="email" autocomplete="username" required>
+  <div class="inloggen" id="weergave-inloggen" hidden>
+    <aside class="inloggen__merk">
+      <div class="inloggen__logo"><img src="assets/img/merk.svg" alt=""><span>Tapteller</span></div>
+      <div class="inloggen__belofte">
+        <p class="inloggen__kop">Elke consumptie telt mee.</p>
+        <p class="inloggen__sub">Beheer de kassa, de drankkaart en het klassement van je evenement vanaf één plek.</p>
       </div>
-      <div class="veld">
-        <label class="veld__label" for="wachtwoord">Wachtwoord</label>
-        <input class="invoer" id="wachtwoord" name="wachtwoord" type="password" autocomplete="current-password" required>
-      </div>
-      <button class="knop knop--primair knop--blok" type="submit">Inloggen</button>
-    </form>
+      <p class="inloggen__voet">Beheer voor medewerkers</p>
+    </aside>
 
-    <div class="inloggen__fout" id="inlogfout" role="alert" hidden></div>
-  </main>
+    <main class="inloggen__paneel">
+      <div class="inloggen__kaart">
+        <h1 class="inloggen__titel">Inloggen</h1>
+        <p class="inloggen__uitleg">Gebruik het account van de beheerder.</p>
+
+        <form class="formulier" id="inlogformulier">
+          <div class="veld">
+            <label class="veld__label" for="email">E-mailadres</label>
+            <input class="invoer" id="email" name="email" type="email" autocomplete="username" required>
+          </div>
+          <div class="veld">
+            <label class="veld__label" for="wachtwoord">Wachtwoord</label>
+            <input class="invoer" id="wachtwoord" name="wachtwoord" type="password" autocomplete="current-password" required>
+          </div>
+          <button class="knop knop--primair knop--blok" type="submit">Inloggen</button>
+        </form>
+
+        <div class="inloggen__fout" id="inlogfout" role="alert" hidden></div>
+      </div>
+    </main>
+  </div>
 
   <div class="app" id="weergave-app" hidden>
-    <header class="app__kop">
-      <div class="app__balk">
-        <img class="app__merk" src="assets/img/merk.svg" alt="">
-        <p class="app__naam" id="evenementnaam">Tapteller</p>
-        <button class="knop knop--spook knop--klein knop--icoon" id="uitloggen" type="button" aria-label="Uitloggen" title="Uitloggen"></button>
+    <aside class="zijbalk">
+      <div class="zijbalk__kop">
+        <img class="zijbalk__merk" src="assets/img/merk.svg" alt="">
+        <div class="zijbalk__titels">
+          <p class="zijbalk__naam" id="evenementnaam">Tapteller</p>
+          <p class="zijbalk__sub">Beheer</p>
+        </div>
+        <button class="knop knop--spook knop--klein knop--icoon zijbalk__uit-mobiel" type="button" data-uitloggen aria-label="Uitloggen" title="Uitloggen"></button>
       </div>
-      <nav class="tabs" id="tabs" role="tablist" aria-label="Onderdelen"></nav>
-    </header>
 
-    <main class="app__inhoud" id="inhoud" tabindex="-1"></main>
+      <nav class="nav" id="tabs" aria-label="Onderdelen"></nav>
+
+      <div class="zijbalk__voet">
+        <a class="nav__link nav__link--extra" id="beamerlink" href="./" target="_blank" rel="noopener"></a>
+        <div class="gebruiker">
+          <span class="gebruiker__avatar" id="gebruikerAvatar" aria-hidden="true"></span>
+          <span class="gebruiker__mail" id="gebruikerMail"></span>
+          <button class="knop knop--spook knop--klein knop--icoon" id="uitloggen" type="button" data-uitloggen aria-label="Uitloggen" title="Uitloggen"></button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="app__hoofd">
+      <header class="paginakop" id="paginakop">
+        <div class="paginakop__tekst">
+          <h1 class="paginakop__titel" id="paginatitel"></h1>
+          <p class="paginakop__uitleg" id="paginauitleg"></p>
+        </div>
+        <div class="paginakop__acties" id="paginaacties"></div>
+      </header>
+      <main class="app__inhoud" id="inhoud" tabindex="-1"></main>
+    </div>
+
     <aside class="mand" id="mand" aria-label="Huidige bestelling" hidden></aside>
   </div>
 

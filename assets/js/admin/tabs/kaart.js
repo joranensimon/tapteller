@@ -6,6 +6,7 @@ import { bevestig } from "../../componenten/dialoog.js";
 import { toast } from "../../componenten/toast.js";
 import { importeerDranken, maakDrank, verwijderDrank, wijzigDrank, zetVolgorde } from "../../data/schrijven.js";
 import { dranken, isZuipbeker } from "../selectors.js";
+import { veld } from "../../componenten/veld.js";
 import { meldFout } from "../fouten.js";
 
 const naarGetal = (tekst) => Math.max(0, Number(String(tekst).replace(",", ".")) || 0);
@@ -13,6 +14,10 @@ const naarGetal = (tekst) => Math.max(0, Number(String(tekst).replace(",", "."))
 export const kaartTab = {
   id: "kaart",
   label: () => "Drankkaart",
+  kort: () => "Kaart",
+  icoon: "kaart",
+  sectie: "beheer",
+  uitleg: () => "Dranken, prijzen in bonnetjes en punten.",
   watch: ["kaart", "instellingen"],
   beschermInvoer: true,
 
@@ -27,7 +32,6 @@ export const kaartTab = {
     wortel.append(
       h("section", { class: "sectie" },
         h("div", { class: "sectie__kop" },
-          h("h2", { class: "sectie__titel", tekst: "Drankkaart" }),
           h("p", { class: "sectie__uitleg", tekst: zuip
             ? "Modus Zuipbeker: elke drank geeft de punten die je hier instelt. Vink ‘Telt’ uit voor dranken die niet meetellen."
             : "Modus Bonnetjes: punten = aantal bonnetjes. Vink ‘Telt’ uit voor dranken zonder punten, zoals water of chips." }),
@@ -110,10 +114,9 @@ function nieuweDrank(aantal, zuip, ctx) {
     h("div", { class: "sectie__kop" }, h("h2", { class: "sectie__titel", tekst: "Drank toevoegen" })),
     h("div", { class: "paneel formulier" },
       naam,
-      h("div", { class: "rij" },
-        h("label", { class: "veld__label", tekst: "Bonnetjes" }), prijs,
-        zuip && h("label", { class: "veld__label", tekst: "Punten" }),
-        zuip && punten,
+      h("div", { class: "rij rij--onder" },
+        veld("Bonnetjes", prijs),
+        zuip && veld("Punten", punten),
         h("button", { class: "knop knop--primair", type: "button", tekst: "Toevoegen", onclick: voegToe }),
       ),
     ),
