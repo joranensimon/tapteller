@@ -7,17 +7,23 @@ import { icoon } from "../../lib/iconen.js";
 import { bevestig } from "../../componenten/dialoog.js";
 import { toast } from "../../componenten/toast.js";
 import { annuleerBestelling, plaatsBestelling } from "../../data/schrijven.js";
-import { dranken, groepen, isZuipbeker, modus, woorden } from "../selectors.js";
+import { BLADEN, bladVan, dranken, groepen, isZuipbeker, modus, woorden } from "../selectors.js";
 import { state } from "../state.js";
 import { meldFout } from "../fouten.js";
 
 let gekozenId = null;
 let mand = {}; // drank-id → aantal
+let zoek = ""; // zoektekst bij het kiezen van een groep
 
 export const kassa = {
   id: "kassa",
   label: () => "Kassa",
+  icoon: "kassa",
+  sectie: "bar",
+  uitleg: () => `Kies ${woorden().welk} ${woorden().enkelvoud.toLowerCase()}, tik de dranken aan en reken af.`,
+  breed: true,
   watch: ["groepen", "kaart", "instellingen"],
+  beschermInvoer: true,
 
   render(wortel, ctx) {
     // Verwijderde dranken of groepen opruimen
@@ -45,30 +51,42 @@ function kiesGroep(wortel, ctx) {
     return;
   }
 
-  wortel.append(
-    h(
-      "div",
-      { class: "tegels" },
-      lijst.map((groep) =>
-        h(
-          "button",
-          {
-            class: "tegel",
-            type: "button",
-            onclick: () => {
-              gekozenId = groep.id;
-              mand = {};
-              ctx.herteken();
-              window.scrollTo(0, 0);
-            },
+  const tegels = h(
+    "div",
+    { class: "tegels" },
+    lijst.map((groep) =>
+      h(
+        "button",
+        {
+          class: "tegel",
+          type: "button",
+          data: { zoek: groep.naam.toLowerCase() },
+          hidden: Boolean(zoek) && !groep.naam.toLowerCase().includes(zoek),
+          onclick: () => {
+            gekozenId = groep.id;
+            mand = {};
+            zoek = "";
+            ctx.herteken();
+            window.scrollTo(0, 0);
           },
-          avatar(groep.foto, { naam: groep.naam, groot: true }),
-          h("span", { tekst: groep.naam }),
-          h("span", { class: "tegel__detail", tekst: `${getal(groep.aantal)} punten` }),
-        ),
+        },
+        avatar(groep.foto, { naam: groep.naam, groot: true }),
+        h("span", { tekst: groep.naam }),
+        h("span", { class: "tegel__detail", tekst: `${getal(groep.aantal)} punten${groep.eten ? ` · ${getal(groep.eten)} eten` : ""}` }),
       ),
     ),
   );
+
+  if (lijst.length > 8) {
+    const veld = h("input", { class: "invoer", type: "search", value: zoek, placeholder: `Zoek ${w.lidwoord} ${w.enkelvoud.toLowerCase()}…`, autocomplete: "off", "aria-label": `Zoek ${w.lidwoord} ${w.enkelvoud.toLowerCase()}` });
+    veld.addEventListener("input", () => {
+      zoek = veld.value.trim().toLowerCase();
+      for (const tegel of tegels.children) tegel.hidden = Boolean(zoek) && !tegel.dataset.zoek.includes(zoek);
+    });
+    wortel.append(h("div", { class: "kassa-zoek" }, veld));
+  }
+
+  wortel.append(tegels);
 }
 
 function kiesDranken(wortel, ctx) {
@@ -89,35 +107,37 @@ function kiesDranken(wortel, ctx) {
   if (!lijst.length) {
     wortel.append(h("p", { class: "paneel paneel--leeg", tekst: "De drankkaart is nog leeg. Vul ze aan in het tabblad Drankkaart." }));
   } else {
-    wortel.append(
-      h(
-        "div",
-        { class: "tegels" },
-        lijst.map((drank) => {
-          const aantal = mand[drank.id] || 0;
-          const detail = bonnetjes(drank.prijs ?? 0) + (isZuipbeker() && drank.telt !== false ? ` · ${getal(drank.punten ?? 1)} pt` : "");
-          return h(
-            "button",
-            {
-              class: `tegel${aantal ? " tegel--gekozen" : ""}`,
-              type: "button",
-              "aria-label": `${drank.naam}, ${bonnetjes(drank.prijs ?? 0)}${aantal ? `, ${aantal} in bestelling` : ""}`,
-              onclick: () => {
-                mand[drank.id] = (mand[drank.id] || 0) + 1;
-                ctx.herteken();
-              },
-            },
-            h("span", { tekst: drank.naam }),
-            h("span", { class: "tegel__detail", tekst: detail }),
-            drank.telt === false && h("span", { class: "tegel__waarschuwing", tekst: "telt niet mee" }),
-            aantal > 0 && h("span", { class: "tegel__aantal", tekst: aantal }),
-          );
-        }),
-      ),
-    );
+    const heeftEten = lijst.some((d) => bladVan(d) === "eten");
+    for (const bladNaam of BLADEN) {
+      const items = lijst.filter((d) => bladVan(d) === bladNaam.id);
+      if (!items.length) continue;
+      if (heeftEten) wortel.append(h("h2", { class: "kassa-kop", tekst: bladNaam.label }));
+      wortel.append(h("div", { class: "tegels" }, items.map((drank) => drankTegel(drank, ctx))));
+    }
   }
 
   tekenMand(ctx);
+}
+
+function drankTegel(drank, ctx) {
+  const aantal = mand[drank.id] || 0;
+  const detail = bonnetjes(drank.prijs ?? 0) + (isZuipbeker() && drank.telt !== false ? ` · ${getal(drank.punten ?? 1)} pt` : "");
+  return h(
+    "button",
+    {
+      class: `tegel${aantal ? " tegel--gekozen" : ""}`,
+      type: "button",
+      "aria-label": `${drank.naam}, ${bonnetjes(drank.prijs ?? 0)}${aantal ? `, ${aantal} in bestelling` : ""}`,
+      onclick: () => {
+        mand[drank.id] = (mand[drank.id] || 0) + 1;
+        ctx.herteken();
+      },
+    },
+    h("span", { tekst: drank.naam }),
+    h("span", { class: "tegel__detail", tekst: detail }),
+    drank.telt === false && h("span", { class: "tegel__waarschuwing", tekst: "telt niet mee" }),
+    aantal > 0 && h("span", { class: "tegel__aantal", tekst: aantal }),
+  );
 }
 
 async function wisselGroep(ctx) {
@@ -169,7 +189,7 @@ function tekenMand(ctx) {
         h("span", { class: "mand__bedrag", tekst: getal(totaal.bonnetjes) }),
         " ",
         h("span", { class: "mand__eenheid", tekst: totaal.bonnetjes === 1 ? "bonnetje" : "bonnetjes" }),
-        h("span", { class: "mand__punten", tekst: `+${getal(totaal.punten)} punten voor ${groep.naam}` }),
+        h("span", { class: "mand__punten", tekst: `+${getal(totaal.punten)} punten${totaal.eten ? ` · +${getal(totaal.eten)} eetpunten` : ""} voor ${groep.naam}` }),
       ),
       h("button", {
         class: "knop knop--spook",
@@ -201,6 +221,7 @@ async function afrekenen(ctx) {
     items,
     bonnetjes: totaal.bonnetjes,
     punten: totaal.punten,
+    eten: totaal.eten,
     t: Date.now(),
     door: state.gebruiker?.email ?? "",
     modus: modus(),
@@ -214,10 +235,10 @@ async function afrekenen(ctx) {
 
   try {
     const sleutel = await plaatsBestelling(bestelling);
-    toast(`${groep.naam}: ${bonnetjes(bestelling.bonnetjes)} · +${getal(bestelling.punten)} pt`, {
+    toast(`${groep.naam}: ${bonnetjes(bestelling.bonnetjes)} · +${getal(bestelling.punten)} pt${bestelling.eten ? ` · +${getal(bestelling.eten)} eten` : ""}`, {
       label: "Ongedaan",
       bijKlik: () =>
-        annuleerBestelling(sleutel, bestelling, state.groepen[groepId]?.aantal)
+        annuleerBestelling(sleutel, bestelling, state.groepen[groepId])
           .then(() => toast("Bestelling geannuleerd"))
           .catch((fout) => meldFout(fout, "Annuleren lukte niet")),
     });

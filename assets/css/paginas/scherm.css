@@ -52,8 +52,7 @@
   color: var(--tekst-zacht);
   font-size: clamp(0.8rem, 1.3vw, 1.25rem);
   font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 .merk__titel {
@@ -82,8 +81,7 @@
 .totaal__label {
   color: var(--tekst-zacht);
   font-size: clamp(0.75rem, 1.2vw, 1.15rem);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0;
 }
 
 /* Grafiek ------------------------------------------------------------ */
@@ -273,3 +271,139 @@
 @keyframes gif-uit {
   to { opacity: 0; transform: scale(0.96); }
 }
+
+/* Status onder de titel (beker en paginabereik) ---------------------- */
+
+.merk__status {
+  display: inline-block;
+  margin-top: clamp(6px, 1.2vh, 14px);
+  padding: 0.25em 0.8em;
+  border: 1px solid var(--lijn-sterk);
+  border-radius: 999px;
+  color: var(--tekst-zacht);
+  font-size: clamp(0.8rem, 1.4vw, 1.3rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dynamische ranglijst ----------------------------------------------- */
+
+.ranglijst {
+  --rijen: 10;
+  --kolommen: 1;
+
+  position: relative;
+  min-height: 0;
+  container-type: size;
+}
+
+.ranglijst[hidden],
+.grafiek[hidden] { display: none; }
+
+.rij {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% / var(--kolommen));
+  height: calc(100% / var(--rijen));
+  padding: clamp(2px, 0.6cqh, 8px) clamp(4px, 0.6cqw, 14px);
+  /* Lettergrootte volgt de rijhoogte en de kolombreedte */
+  font-size: min(calc(100cqh / var(--rijen) * 0.3), calc(100cqw / var(--kolommen) * 0.042));
+  transform: translate(calc(var(--kolom, 0) * 100%), calc(var(--rij, 0) * 100%));
+  transition: transform 0.85s var(--ease), opacity 0.5s;
+}
+
+.rij--weg {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(0, calc(var(--rijen) * 100%));
+}
+
+.rij__binnen {
+  display: grid;
+  grid-template-columns: 1.7em auto minmax(0, 1fr) auto;
+  gap: 0.7em;
+  align-items: center;
+  height: 100%;
+  padding: 0 0.8em 0 0.4em;
+  border: 1px solid var(--lijn);
+  border-radius: 0.6em;
+  background: var(--vlak);
+}
+
+.rij__rang {
+  color: var(--tekst-vaag);
+  font-size: 1.15em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.rij__foto {
+  display: grid;
+  place-items: center;
+  width: 2.3em;
+  height: 2.3em;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #fff var(--foto, none) center / cover no-repeat;
+}
+.rij__foto--leeg { background: var(--vlak-hover); color: var(--tekst-zacht); font-size: 0.8em; font-weight: 700; }
+
+.rij__midden { min-width: 0; }
+
+.rij__naam {
+  display: block;
+  overflow: hidden;
+  font-size: 1.15em;
+  font-weight: 700;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rij__balk {
+  height: 0.5em;
+  margin-top: 0.35em;
+  overflow: hidden;
+  border-radius: 0.25em;
+  background: var(--vlak-hover);
+}
+
+/* Zelfde geluidsmeter als de grafiek: groen → geel → rood over de volle lengte, in blokjes */
+.rij__vul {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, var(--meter-groen) 0 58%, var(--meter-geel) 58% 82%, var(--meter-rood) 82% 100%);
+  -webkit-mask-image: repeating-linear-gradient(to right, #000 0 0.55em, transparent 0.55em 0.65em);
+  mask-image: repeating-linear-gradient(to right, #000 0 0.55em, transparent 0.55em 0.65em);
+  clip-path: inset(0 calc(100% - var(--aandeel, 0) * 1%) 0 0);
+  transition: clip-path 0.9s var(--ease);
+}
+
+.rij__waarde {
+  min-width: 2.2em;
+  font-size: 1.7em;
+  font-weight: 800;
+  font-stretch: 62%;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: right;
+}
+
+.rij--leider .rij__binnen { border-color: var(--merk); }
+.rij--leider .rij__rang,
+.rij--leider .rij__waarde { color: var(--merk); }
+.rij--zilver .rij__rang { color: #c3cad6; }
+.rij--brons .rij__rang { color: #d29462; }
+
+/* Knoppen om door te klikken (onderaan, verdwijnen mee met de rest van de voet) */
+.bladeren { display: flex; align-items: center; gap: var(--ruimte-2); }
+.bladeren .knop { min-width: 44px; color: var(--tekst); }
+.bladeren .knop[aria-pressed="true"] { border-color: var(--merk); color: var(--merk); }
+
+.ranglijst--zonder-foto .rij__foto { display: none; }
+.ranglijst--zonder-foto .rij__binnen { grid-template-columns: 1.7em minmax(0, 1fr) auto; }
+.bladeren .knop { font-size: 1.25rem; }
+.bladeren #bladAlles { font-size: var(--tekst-s); }

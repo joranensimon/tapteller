@@ -31,3 +31,16 @@ test("namen worden afgekapt op 40 tekens", () => {
   const [d] = leesKaartLijst("x".repeat(60), { zuipbeker: false, startVolgorde: 0 });
   assert.equal(d.naam.length, 40);
 });
+
+test("import op het blad Eten: telt mee voor de eetbeker en krijgt blad eten", () => {
+  const [hap] = leesKaartLijst("Warme hapjes;3", { zuipbeker: false, blad: "eten" });
+  assert.equal(hap.blad, "eten");
+  assert.equal(hap.prijs, 3);
+  assert.equal(hap.punten, 3);
+  assert.equal(hap.telt, true);
+});
+
+test("import op het blad Dranken heeft geen blad-veld", () => {
+  const [d] = leesKaartLijst("Pils;1", { zuipbeker: false });
+  assert.equal("blad" in d, false);
+});

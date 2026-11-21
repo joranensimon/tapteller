@@ -17,7 +17,8 @@ function toonLaadFout(tekst) {
   toon("laden");
 }
 
-el("uitloggen").append(icoon("uitloggen"));
+document.querySelectorAll("[data-uitloggen]").forEach((knop) => knop.append(icoon("uitloggen")));
+el("beamerlink").append(icoon("scherm"), h("span", { tekst: "Beamer openen" }), icoon("extern"));
 
 async function start() {
   let sessie, luisteraars, shell;
@@ -63,7 +64,7 @@ async function start() {
     }
   });
 
-  el("uitloggen").addEventListener("click", () => sessie.uitloggen());
+  document.querySelectorAll("[data-uitloggen]").forEach((knop) => knop.addEventListener("click", () => sessie.uitloggen()));
 
   sessie.volgSessie({
     bijUitgelogd() {
@@ -87,6 +88,8 @@ async function start() {
       stop();
       fout.hidden = true;
       zet({ gebruiker });
+      el("gebruikerMail").textContent = gebruiker.email ?? "";
+      el("gebruikerAvatar").textContent = (gebruiker.email ?? "?")[0].toUpperCase();
       stopLuisteraars = luisteraars.startLuisteraars((e) => meldFout(e, "Verbinding verbroken"));
       shell.startShell();
       toon("app");

@@ -6,14 +6,14 @@
   padding: 3px;
   border: 1px solid var(--lijn-sterk);
   border-radius: calc(var(--straal) + 3px);
-  background: var(--verhoogd);
+  background: var(--vlak-hover);
 }
 
 .segment__optie {
   display: grid;
   gap: 2px;
   align-content: center;
-  min-height: 52px;
+  min-height: 48px;
   padding: var(--ruimte-2) var(--ruimte-3);
   border: 0;
   border-radius: var(--straal);
@@ -27,8 +27,9 @@
 }
 .segment__optie:hover { color: var(--tekst); }
 .segment__optie[aria-pressed="true"] {
-  background: var(--merk);
-  color: var(--merk-tekst);
+  background: var(--vlak);
+  box-shadow: 0 1px 3px rgb(16 24 40 / 0.14);
+  color: var(--tekst);
 }
 .segment__uitleg {
   font-size: var(--tekst-xs);

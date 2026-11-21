@@ -22,6 +22,7 @@
         <div>
           <p class="merk__evenement" id="evenement" hidden></p>
           <h1 class="merk__titel" id="titel">Klassement</h1>
+          <p class="merk__status" id="status" hidden></p>
         </div>
       </div>
       <p class="totaal">
@@ -30,10 +31,16 @@
       </p>
     </header>
 
-    <section class="grafiek" id="grafiek" role="list" aria-label="Klassement"></section>
+    <section class="ranglijst" id="lijst" role="list" aria-label="Klassement"></section>
+    <section class="grafiek" id="grafiek" role="list" aria-label="Klassement" hidden></section>
 
     <footer class="bord__voet">
       <time class="klok" id="klok"></time>
+      <div class="bladeren" id="bladeren" hidden>
+        <button class="knop knop--spook knop--klein" id="bladVorige" type="button" aria-label="Vorige pagina">‹</button>
+        <button class="knop knop--spook knop--klein" id="bladAlles" type="button" aria-pressed="false"></button>
+        <button class="knop knop--spook knop--klein" id="bladVolgende" type="button" aria-label="Volgende pagina">›</button>
+      </div>
       <button class="knop knop--spook knop--klein" id="volScherm" type="button">Volledig scherm</button>
     </footer>
   </main>

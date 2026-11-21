@@ -15,7 +15,7 @@ export const firebaseConfig = {
 
 export const APP = {
   naam: "Tapteller",
-  versie: "3.0.0",
+  versie: "3.3.0",
 
   /** Hoelang een gif op de beamer blijft staan (ms). */
   gifDuurMs: 3500,

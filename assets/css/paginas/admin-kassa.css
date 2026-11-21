@@ -2,7 +2,7 @@
 
 .tegels {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
   gap: var(--ruimte-3);
 }
 
@@ -12,11 +12,12 @@
   align-content: center;
   justify-items: center;
   gap: var(--ruimte-1);
-  min-height: 5.5rem;
+  min-height: 6rem;
   padding: var(--ruimte-3);
   border: 1px solid var(--lijn);
   border-radius: var(--straal-l);
   background: var(--vlak);
+  box-shadow: var(--schaduw-kaart);
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
@@ -26,7 +27,7 @@
 
 .tegel:hover { background: var(--vlak-hover); }
 .tegel:active { transform: scale(0.97); }
-.tegel--gekozen { border-color: var(--merk); }
+.tegel--gekozen { border-color: var(--merk); background: var(--merk-zacht); }
 
 .tegel__detail {
   color: var(--tekst-zacht);
@@ -84,16 +85,22 @@
 .mand {
   position: fixed;
   right: 0;
-  bottom: 0;
-  left: 0;
+  bottom: var(--nav-onder, 0px);
+  left: var(--zijbalk-breedte);
   z-index: 40;
   padding: var(--ruimte-3) var(--ruimte-4) calc(var(--ruimte-3) + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--lijn-sterk);
   background: var(--verhoogd);
-  box-shadow: 0 -12px 32px rgb(0 0 0 / 0.25);
+  box-shadow: 0 -8px 24px rgb(16 24 40 / 0.08);
 }
 
-.mand__inhoud { width: min(46rem, 100%); margin: 0 auto; }
+.mand { padding-inline: var(--ruimte-6); }
+.mand__inhoud { width: min(78rem, 100%); margin: 0 auto; }
+
+@media (max-width: 56rem) {
+  :root { --nav-onder: calc(var(--navbalk-hoogte) + env(safe-area-inset-bottom, 0px)); }
+  .mand { left: 0; padding-inline: var(--ruimte-4); }
+}
 
 .mand__regels {
   display: flex;
@@ -199,5 +206,10 @@
 
 .snelknop--accent { border-color: transparent; background: var(--merk); color: var(--merk-tekst); }
 .snelknop--accent:hover { background: var(--merk-hover); }
-.snelknop--donker { border-color: transparent; background: var(--tekst); color: var(--achtergrond); }
-.snelknop--donker:hover { background: var(--tekst-zacht); }
+.snelknop--donker { border-color: transparent; background: var(--primair); color: var(--primair-tekst); }
+.snelknop--donker:hover { background: var(--primair-hover); }
+
+.tegel[hidden] { display: none; }
+.kassa-zoek { margin-bottom: var(--ruimte-4); }
+.kassa-zoek .invoer { max-width: 28rem; }
+.kassa-kop { margin: var(--ruimte-5) 0 var(--ruimte-3); font-size: var(--tekst-m); font-weight: 700; }

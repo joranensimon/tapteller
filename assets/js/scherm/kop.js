@@ -2,7 +2,7 @@ import { getal } from "../lib/opmaak.js";
 import { isAfbeelding } from "../lib/media.js";
 
 /** De kop van het scherm: titel, evenementnaam, logo en totaal. */
-export function maakKop({ titel, evenement, logo, totaal }) {
+export function maakKop({ titel, evenement, logo, totaal, status }) {
   return {
     zetTitel(tekst) {
       titel.textContent = typeof tekst === "string" && tekst ? tekst : "Klassement";
@@ -15,6 +15,10 @@ export function maakKop({ titel, evenement, logo, totaal }) {
       const bruikbaar = isAfbeelding(bron);
       logo.hidden = !bruikbaar;
       if (bruikbaar) logo.src = bron;
+    },
+    zetStatus(tekst) {
+      status.textContent = tekst || "";
+      status.hidden = !tekst;
     },
     zetTotaal(waarde) {
       totaal.textContent = getal(waarde);

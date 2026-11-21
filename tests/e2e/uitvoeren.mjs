@@ -84,7 +84,7 @@ try {
     assert.equal(await pagina.textContent("#evenementnaam"), "Quiz Jeugdhuis");
     stap("beheerder komt in de app, met de naam van het evenement");
 
-    await pagina.click("#uitloggen");
+    await pagina.click("[data-uitloggen]:visible");
     await pagina.waitForSelector("#inlogformulier");
     await pagina.fill("#email", "iemand@test.be");
     await pagina.fill("#wachtwoord", "goed");
@@ -104,7 +104,7 @@ try {
       { viewport: { width: 390, height: 844 }, colorScheme: "dark" },
       { zaad: ZAAD, gebruiker: { email: "beheer@test.be", uid: "u1" } },
     );
-    await pagina.goto(`${basis}/admin.html`);
+    await pagina.goto(`${basis}/admin.html#kassa`);
     await pagina.waitForSelector(".tegel");
     assert.equal((await pagina.$$(".tegel")).length, 3);
     await pagina.screenshot({ path: UITVOER + "02-kassa-groepen.png" });
@@ -154,14 +154,14 @@ try {
 
     // Modus wisselen
     await pagina.click("#tab-instellingen");
-    await pagina.click(".segment__optie:has-text('Zuipbeker')");
+    await pagina.click(".segment__optie:has-text('Eigen weging')");
     await pagina.waitForFunction(() => window.__mockTree.instellingen.modus === "zuipbeker");
     await pagina.screenshot({ path: UITVOER + "07-instellingen.png", fullPage: true });
-    stap("wisselen naar Zuipbeker");
+    stap("wisselen naar Eigen weging");
 
     // Bestelling annuleren
     await pagina.click("#tab-bestellingen");
-    await pagina.click(".lijst__rij button:has-text('Annuleer')");
+    await pagina.click("tbody tr button:has-text('Annuleer')");
     await pagina.click("dialog[open] button[value=ok]");
     await pagina.waitForFunction(() => window.__mockTree.groepen.b.aantal === 4);
     await pagina.screenshot({ path: UITVOER + "08-bestellingen.png", fullPage: true });
@@ -180,7 +180,7 @@ try {
     await pagina.emulateMedia({ colorScheme: "light" });
     await pagina.click("#tab-kassa");
     await pagina.waitForSelector(".tegel");
-    assert.equal(await pagina.evaluate(() => getComputedStyle(document.body).backgroundColor), "rgb(244, 243, 239)");
+    assert.equal(await pagina.evaluate(() => getComputedStyle(document.body).backgroundColor), "rgb(244, 245, 247)");
     await pagina.screenshot({ path: UITVOER + "10-licht.png" });
     stap("lichte weergave volgt het systeem");
 
@@ -189,11 +189,61 @@ try {
     await context.close();
   }
 
+  /* ------------------------------------------------------------------ desktop */
+  console.log("Beheer op desktop");
+  {
+    const nu = Date.now();
+    const zaad = {
+      ...ZAAD,
+      groepen: { a: { naam: "KSA", aantal: 40, t: 1 }, b: { naam: "KLJ", aantal: 25, t: 2 }, c: { naam: "Scouts Merchtem", aantal: 55, t: 3 } },
+      kaart: { k1: { naam: "Pils", prijs: 1, punten: 1, telt: true, v: 0 }, k2: { naam: "Streekbier", prijs: 2, punten: 2, telt: true, v: 1 } },
+      bestellingen: {
+        o1: { groep: "c", groepNaam: "Scouts Merchtem", items: { k1: { naam: "Pils", aantal: 4 } }, bonnetjes: 4, punten: 4, t: nu - 60000, door: "beheer@test.be" },
+        o2: { groep: "a", groepNaam: "KSA", items: { k2: { naam: "Streekbier", aantal: 2 }, k1: { naam: "Pils", aantal: 1 } }, bonnetjes: 5, punten: 5, t: nu - 600000, door: "beheer@test.be" },
+        o3: { groep: "b", groepNaam: "KLJ", items: { k1: { naam: "Pils", aantal: 3 } }, bonnetjes: 3, punten: 3, t: nu - 900000, door: "beheer@test.be", geannuleerd: true },
+      },
+    };
+    for (const schema of ["light", "dark"]) {
+      const { pagina, problemen, context } = await nieuwePagina({ viewport: { width: 1440, height: 900 }, colorScheme: schema }, { zaad, gebruiker: { email: "beheer@test.be", uid: "u1" } });
+      await pagina.goto(`${basis}/admin.html`);
+      await pagina.waitForSelector(".kpis");
+      await pagina.waitForTimeout(700);
+      for (const id of ["overzicht", "kassa", "bestellingen", "groepen", "kaart", "instellingen"]) {
+        await pagina.click(`#tab-${id}`);
+        if (id === "kassa") await pagina.click(".tegel:has-text('KSA')");
+        await pagina.waitForTimeout(250);
+        await pagina.screenshot({ path: `${UITVOER}d-${schema}-${id}.png` });
+      }
+      assert.deepEqual(problemen, [], "console- of CSP-fouten op desktop");
+      await context.close();
+    }
+    const { pagina, context } = await nieuwePagina({ viewport: { width: 1440, height: 900 }, colorScheme: "light" }, {});
+    await pagina.goto(`${basis}/admin.html`);
+    await pagina.waitForSelector("#inlogformulier");
+    await pagina.screenshot({ path: UITVOER + "d-inloggen.png" });
+    await context.close();
+    stap("desktop-weergaven (licht en donker) zonder fouten");
+
+    const mobiel = await nieuwePagina({ viewport: { width: 390, height: 844 }, colorScheme: "light" }, { zaad, gebruiker: { email: "beheer@test.be", uid: "u1" } });
+    await mobiel.pagina.goto(`${basis}/admin.html`);
+    await mobiel.pagina.waitForSelector(".kpis");
+    await mobiel.pagina.waitForTimeout(700);
+    for (const id of ["overzicht", "bestellingen", "groepen", "kaart"]) {
+      await mobiel.pagina.click(`#tab-${id}`);
+      await mobiel.pagina.waitForTimeout(250);
+      await mobiel.pagina.screenshot({ path: `${UITVOER}m-${id}.png` });
+    }
+    assert.deepEqual(mobiel.problemen, [], "console- of CSP-fouten op gsm");
+    await mobiel.context.close();
+    stap("gsm-weergaven zonder fouten");
+  }
+
   /* ------------------------------------------------------------------ beamer */
   console.log("Beamer");
   {
     const zaad = {
       ...ZAAD,
+      instellingen: { ...ZAAD.instellingen, weergave: "grafiek" },
       groepen: { a: { naam: "KSA", aantal: 40, t: 1 }, b: { naam: "KLJ", aantal: 25, t: 2 }, c: { naam: "Scouts", aantal: 55, t: 3 }, d: { naam: "Chiro", aantal: 0, t: 4 } },
       gifs: { b: PIXEL_GIF },
     };
@@ -227,6 +277,145 @@ try {
     assert.deepEqual(problemen, [], "console- of CSP-fouten op de beamer");
     stap("geen console- of CSP-fouten");
     await context.close();
+  }
+
+  /* ------------------------------------------------------------------ eetbeker en veel teams */
+  console.log("Beheer: eetbeker, zoeken en automatisch nummeren");
+  {
+    const teams = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [`g${i}`, { naam: `Team ${i + 1}`, aantal: 0, eten: 0, t: i }]));
+    const zaad = {
+      ...ZAAD,
+      instellingen: { ...ZAAD.instellingen, woord: "team", modus: "bonnetjes" },
+      groepen: teams,
+      kaart: { k1: { naam: "Pils", prijs: 1, punten: 1, telt: true, v: 0 }, k2: { naam: "Warme hapjes", prijs: 3, punten: 3, telt: true, blad: "eten", v: 1 } },
+    };
+    const { pagina, problemen, context } = await nieuwePagina({ viewport: { width: 1280, height: 900 } }, { zaad, gebruiker: { email: "beheer@test.be", uid: "u1" } });
+    await pagina.goto(`${basis}/admin.html#kassa`);
+    await pagina.waitForSelector(".kassa-zoek");
+    await pagina.fill(".kassa-zoek input", "team 11");
+    assert.equal(await pagina.$$eval(".tegel:not([hidden])", (t) => t.length), 1);
+    await pagina.click(".tegel:not([hidden])");
+    await pagina.waitForSelector(".kassa-kop");
+    await pagina.click(".tegel:has-text('Pils')");
+    await pagina.click(".tegel:has-text('Pils')");
+    await pagina.click(".tegel:has-text('Warme hapjes')");
+    assert.match(await pagina.textContent(".mand__punten"), /\+2 punten · \+3 eetpunten voor Team 11/);
+    await pagina.screenshot({ path: UITVOER + "30-kassa-eten.png" });
+    await pagina.click("text=Afrekenen");
+    await pagina.waitForTimeout(400);
+    let b = await boom(pagina);
+    assert.equal(b.groepen.g10.aantal, 2);
+    assert.equal(b.groepen.g10.eten, 3);
+    const bestelling = Object.values(b.bestellingen)[0];
+    assert.equal(bestelling.punten, 2);
+    assert.equal(bestelling.eten, 3);
+    stap("bestelling met drank en eten: drankpunten en eetpunten apart bijgeschreven");
+
+    await pagina.click("#tab-bestellingen");
+    await pagina.click("tbody tr button:has-text('Annuleer')");
+    await pagina.click("dialog[open] button[value=ok]");
+    await pagina.waitForTimeout(400);
+    b = await boom(pagina);
+    assert.equal(b.groepen.g10.aantal, 0);
+    assert.equal(b.groepen.g10.eten, 0);
+    stap("annuleren haalt drank- en eetpunten terug");
+
+    await pagina.click("#tab-groepen");
+    await pagina.click("summary:has-text('automatisch nummeren')");
+    await pagina.fill(".uitklap__inhoud input[type=number]", "15");
+    await pagina.click("button:has-text('Aanmaken')");
+    await pagina.waitForTimeout(400);
+    b = await boom(pagina);
+    assert.equal(Object.keys(b.groepen).length, 15);
+    stap("automatisch nummeren maakt enkel de ontbrekende teams aan (12 + 3 = 15)");
+
+    await pagina.click("#tab-kaart");
+    await pagina.click(".segment__optie:has-text('Eten')");
+    await pagina.waitForSelector("text=Eten toevoegen");
+    await pagina.screenshot({ path: UITVOER + "31-kaart-eten.png" });
+    await pagina.click("#tab-instellingen");
+    await pagina.click(".segment__optie:has-text('Per consumptie')");
+    await pagina.waitForTimeout(300);
+    assert.equal((await boom(pagina)).instellingen.modus, "consumptie");
+    await pagina.click(".segment__optie:has-text('Wisselend')");
+    await pagina.waitForTimeout(300);
+    assert.equal((await boom(pagina)).instellingen.beker, "wissel");
+    await pagina.screenshot({ path: UITVOER + "32-instellingen.png" });
+    stap("weging en beamer-opties worden opgeslagen");
+    assert.deepEqual(problemen, [], "console- of CSP-fouten in beheer");
+    await context.close();
+  }
+
+  /* ------------------------------------------------------------------ beamer: lijst */
+  console.log("Beamer als dynamische lijst");
+  {
+    const veel = Object.fromEntries(Array.from({ length: 34 }, (_, i) => [`g${i}`, { naam: `Team ${i + 1}`, aantal: (34 - i) * 2, eten: i * 3, t: i }]));
+    const zaad = { ...ZAAD, instellingen: { ...ZAAD.instellingen, weergave: "lijst", perPagina: 10, wisselSec: 0, beker: "drank" }, groepen: veel, gifs: { g1: PIXEL_GIF } };
+    const { pagina, problemen, context } = await nieuwePagina({ viewport: { width: 1920, height: 1080 } }, { zaad });
+    await pagina.goto(`${basis}/index.html`);
+    await pagina.waitForSelector(".rij");
+    await pagina.waitForTimeout(1300);
+    const zichtbaar = () => pagina.$$eval(".rij:not(.rij--weg) .rij__naam", (e) => e.map((x) => x.textContent));
+    await pagina.screenshot({ path: UITVOER + "20-lijst-pagina1.png" });
+
+    let namen = await zichtbaar();
+    assert.equal(namen.length, 10);
+    assert.equal(namen[0], "Team 1");
+    assert.equal(await pagina.textContent("#status"), "plaats 1–10 van 34");
+    stap("34 teams: pagina 1 toont 10 rijen, status klopt");
+
+    await pagina.click("#bladVolgende");
+    await pagina.waitForTimeout(1200);
+    namen = await zichtbaar();
+    assert.equal(namen[0], "Team 11");
+    assert.equal(await pagina.textContent("#status"), "plaats 11–20 van 34");
+    await pagina.screenshot({ path: UITVOER + "21-lijst-pagina2.png" });
+    stap("doorklikken naar pagina 2");
+
+    await pagina.keyboard.press("ArrowLeft");
+    await pagina.waitForTimeout(300);
+    assert.equal((await zichtbaar())[0], "Team 1");
+    stap("pijltje links gaat terug");
+
+    await pagina.click("#bladAlles");
+    await pagina.waitForTimeout(1300);
+    assert.equal((await zichtbaar()).length, 34);
+    assert.equal(await pagina.$eval("#lijst", (e) => e.style.getPropertyValue("--kolommen")), "3");
+    await pagina.screenshot({ path: UITVOER + "22-lijst-alles.png" });
+    stap("alles tonen: 34 teams in 3 kolommen");
+
+    await pagina.click("#bladAlles");
+    await pagina.waitForTimeout(300);
+    assert.equal((await zichtbaar()).length, 10);
+
+    // Team 2 krijgt veel punten en passeert Team 1; de rij springt naar plek 0
+    await pagina.evaluate(() => import("https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js").then((m) => m.update(m.ref(null), { "groepen/g1/aantal": m.increment(10) })));
+    await pagina.waitForSelector("#gif:not([hidden])");
+    await pagina.waitForSelector("#gif", { state: "hidden", timeout: 8000 });
+    const plek = (naam) => pagina.$$eval(".rij", (rijen, n) => Number(rijen.find((r) => r.querySelector(".rij__naam").textContent === n).style.getPropertyValue("--rij")), naam);
+    assert.equal(await plek("Team 2"), 0);
+    assert.equal(await plek("Team 1"), 1);
+    stap("Team 2 haalt Team 1 in en springt naar plek 1; gif speelt");
+
+    assert.deepEqual(problemen, [], "console- of CSP-fouten in de lijst");
+    await context.close();
+
+    // Eetbeker en wisselen tussen bekers
+    const zaad2 = { ...ZAAD, instellingen: { ...ZAAD.instellingen, weergave: "lijst", perPagina: 10, wisselSec: 0, beker: "wissel" }, groepen: { a: { naam: "KSA", aantal: 9, eten: 1, t: 1 }, b: { naam: "KLJ", aantal: 4, eten: 8, t: 2 } } };
+    const e = await nieuwePagina({ viewport: { width: 1440, height: 810 } }, { zaad: zaad2 });
+    await e.pagina.goto(`${basis}/index.html`);
+    await e.pagina.waitForSelector(".rij");
+    assert.equal(await e.pagina.textContent("#status"), "Drankbeker");
+    await e.pagina.click("#bladVolgende");
+    await e.pagina.waitForTimeout(1000);
+    assert.equal(await e.pagina.textContent("#status"), "Eetbeker");
+    const bovenste = () => e.pagina.$$eval(".rij:not(.rij--weg)", (r) => r.find((x) => x.style.getPropertyValue("--rij") === "0").querySelector(".rij__naam").textContent);
+    assert.equal(await bovenste(), "KLJ");
+    assert.equal(await e.pagina.textContent("#totaal"), "9");
+    await e.pagina.screenshot({ path: UITVOER + "23-eetbeker.png" });
+    stap("beker wisselt van drank naar eten met eigen klassement en totaal");
+    assert.deepEqual(e.problemen, []);
+    await e.context.close();
   }
 
   console.log("\nAlle e2e-tests geslaagd. Schermafbeeldingen staan in tests/e2e/uitvoer/");

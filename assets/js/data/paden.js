@@ -4,11 +4,14 @@ export const PAD = {
   titel: "instellingen/titel",
   naam: "instellingen/naam",
   logo: "instellingen/logo",
+  perPagina: "instellingen/perPagina",
+  wisselSec: "instellingen/wisselSec",
 
   groepen: "groepen",
   groep: (id) => `groepen/${id}`,
   groepFoto: (id) => `groepen/${id}/foto`,
   aantal: (id) => `groepen/${id}/aantal`,
+  eten: (id) => `groepen/${id}/eten`,
 
   gifs: "gifs",
   gif: (id) => `gifs/${id}`,

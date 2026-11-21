@@ -7,8 +7,9 @@
   align-items: center;
   justify-content: center;
   gap: var(--ruimte-2);
-  min-height: 44px;
+  min-height: 40px;
   padding: 0 var(--ruimte-4);
+  box-shadow: var(--schaduw-kaart);
   border: 1px solid var(--kn-rand);
   border-radius: var(--straal);
   background: var(--kn-achtergrond);
@@ -27,28 +28,29 @@
 .knop:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
 .knop--primair {
-  --kn-achtergrond: var(--merk);
-  --kn-tekst: var(--merk-tekst);
+  --kn-achtergrond: var(--primair);
+  --kn-tekst: var(--primair-tekst);
   --kn-rand: transparent;
 }
-.knop--primair:hover { --kn-achtergrond: var(--merk-hover); }
+.knop--primair:hover { --kn-achtergrond: var(--primair-hover); }
 
-.knop--spook { --kn-achtergrond: transparent; }
-.knop--spook:hover { --kn-achtergrond: var(--vlak); }
+.knop--spook { --kn-achtergrond: transparent; --kn-rand: transparent; box-shadow: none; }
+.knop--spook:hover { --kn-achtergrond: var(--vlak-hover); }
 
 .knop--gevaar { --kn-tekst: var(--gevaar); }
+.knop--gevaar:hover { --kn-achtergrond: var(--gevaar-zacht); }
 
 .knop--klein {
-  min-height: 36px;
+  min-height: 34px;
   padding: 0 var(--ruimte-3);
-  font-size: var(--tekst-xs);
+  font-size: var(--tekst-s);
 }
 
 .knop--icoon {
-  width: 44px;
+  width: 40px;
   padding: 0;
 }
-.knop--icoon.knop--klein { width: 36px; }
+.knop--icoon.knop--klein { width: 34px; }
 
 .knop--blok { width: 100%; }
 

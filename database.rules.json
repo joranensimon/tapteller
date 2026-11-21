@@ -11,6 +11,9 @@
         "aantal": {
           ".validate": "newData.isNumber() && newData.val() >= 0"
         },
+        "eten": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
         "t": {
           ".validate": "newData.isNumber()"
         },
@@ -45,7 +48,19 @@
         ".validate": "newData.val() === 'groep' || newData.val() === 'team' || newData.val() === 'ploeg' || newData.val() === 'jeugdbeweging'"
       },
       "modus": {
-        ".validate": "newData.val() === 'bonnetjes' || newData.val() === 'zuipbeker'"
+        ".validate": "newData.val() === 'bonnetjes' || newData.val() === 'consumptie' || newData.val() === 'zuipbeker'"
+      },
+      "perPagina": {
+        ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 40"
+      },
+      "wisselSec": {
+        ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 120"
+      },
+      "weergave": {
+        ".validate": "newData.val() === 'lijst' || newData.val() === 'grafiek'"
+      },
+      "beker": {
+        ".validate": "newData.val() === 'drank' || newData.val() === 'eten' || newData.val() === 'wissel'"
       },
       "$other": {
         ".validate": false
@@ -70,6 +85,9 @@
         },
         "v": {
           ".validate": "newData.isNumber()"
+        },
+        "blad": {
+          ".validate": "newData.val() === 'dranken' || newData.val() === 'eten'"
         },
         "$other": {
           ".validate": false

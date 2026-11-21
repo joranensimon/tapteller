@@ -10,7 +10,7 @@ import { cssUrl, isAfbeelding } from "../lib/media.js";
 
 const WISSEL_MS = 650;
 
-export function maakGrafiek(wortel, { bijScore }) {
+export function maakGrafiek(wortel, { bijScore = () => {} } = {}) {
   const kolommen = new Map();
   let vorigeScores = null;
 
@@ -39,16 +39,18 @@ export function maakGrafiek(wortel, { bijScore }) {
     leeg(wortel).append(h("p", { class: "grafiek__melding", tekst }));
   }
 
-  function teken(groepen) {
-    const lijst = rangschik(groepen);
-
+  /**
+   * @param {Array} lijst  al gerangschikte groepen (alleen de zichtbare pagina)
+   * @param {{ offset?: number, hoogste?: number }} opties  offset = aantal groepen vóór deze pagina
+   */
+  function tekenLijst(lijst, { offset = 0, hoogste = null } = {}) {
     if (!lijst.length) {
       toonMelding("Nog geen groepen. Voeg ze toe via de adminpagina.");
       return;
     }
     wortel.querySelector(".grafiek__melding")?.remove();
 
-    const hoogste = Math.max(...lijst.map((g) => g.aantal));
+    hoogste = hoogste ?? Math.max(...lijst.map((g) => g.aantal));
     const scherm = wortel.closest(".scherm");
     scherm?.classList.toggle("scherm--zonder-foto", !lijst.some((g) => isAfbeelding(g.foto)));
 
@@ -62,8 +64,8 @@ export function maakGrafiek(wortel, { bijScore }) {
     lijst.forEach((groep, index) => {
       const bestond = kolommen.has(groep.id);
       const o = kolommen.get(groep.id) ?? maakKolom(groep.id);
-      const rang = index + 1;
-      const isLeider = index === 0 && groep.aantal > 0;
+      const rang = offset + index + 1;
+      const isLeider = rang === 1 && groep.aantal > 0;
 
       o.kolom.classList.toggle("kolom--leider", isLeider);
       o.kolom.setAttribute("aria-label", `${groep.naam}: ${getal(groep.aantal)} punten, plaats ${rang}`);
@@ -77,7 +79,7 @@ export function maakGrafiek(wortel, { bijScore }) {
 
       const wijziging = o.rangNummer !== null && o.rangNummer !== rang;
       o.rangNummer = rang;
-      o.kolom.style.setProperty("--rang", rang);
+      o.kolom.style.setProperty("--rang", index + 1);
 
       const waarde = aandeel(groep.aantal, hoogste);
       if (bestond) o.kolom.style.setProperty("--aandeel", waarde);
@@ -124,5 +126,7 @@ export function maakGrafiek(wortel, { bijScore }) {
     vorigeScores = nieuweScores;
   }
 
-  return { teken, toonMelding };
+  const teken = (groepen) => tekenLijst(rangschik(groepen));
+
+  return { teken, tekenLijst, toonMelding };
 }

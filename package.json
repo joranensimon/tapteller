@@ -1,6 +1,6 @@
 {
   "name": "tapteller",
-  "version": "3.0.0",
+  "version": "3.3.0",
   "private": true,
   "type": "module",
   "description": "Kassa en live klassement voor fuiven en evenementen.",

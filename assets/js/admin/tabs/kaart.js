@@ -5,14 +5,22 @@ import { leesKaartLijst } from "../../lib/kaartimport.js";
 import { bevestig } from "../../componenten/dialoog.js";
 import { toast } from "../../componenten/toast.js";
 import { importeerDranken, maakDrank, verwijderDrank, wijzigDrank, zetVolgorde } from "../../data/schrijven.js";
-import { dranken, isZuipbeker } from "../selectors.js";
+import { segment } from "../../componenten/segment.js";
+import { BLADEN, bladVan, dranken, isZuipbeker, modus } from "../selectors.js";
+import { veld } from "../../componenten/veld.js";
 import { meldFout } from "../fouten.js";
+
+let blad = "dranken"; // welk blad is open: dranken of eten
 
 const naarGetal = (tekst) => Math.max(0, Number(String(tekst).replace(",", ".")) || 0);
 
 export const kaartTab = {
   id: "kaart",
   label: () => "Drankkaart",
+  kort: () => "Kaart",
+  icoon: "kaart",
+  sectie: "beheer",
+  uitleg: () => "Dranken en eten met prijzen in bonnetjes. Eten telt mee voor de eetbeker.",
   watch: ["kaart", "instellingen"],
   beschermInvoer: true,
 
@@ -24,15 +32,23 @@ export const kaartTab = {
     const scheef = Object.fromEntries(lijst.flatMap((d, i) => (d.v !== i ? [[d.id, i]] : [])));
     if (Object.keys(scheef).length) zetVolgorde(scheef).catch(() => {});
 
+    const open = lijst.filter((d) => bladVan(d) === blad);
+    const naam = blad === "eten" ? "eten" : "dranken";
+
     wortel.append(
+      segment({
+        waarde: blad,
+        opties: BLADEN.map((b) => ({ waarde: b.id, label: `${b.label} (${lijst.filter((d) => bladVan(d) === b.id).length})` })),
+        bijKeuze: (waarde) => {
+          blad = waarde;
+          ctx.herteken();
+        },
+      }),
       h("section", { class: "sectie" },
         h("div", { class: "sectie__kop" },
-          h("h2", { class: "sectie__titel", tekst: "Drankkaart" }),
-          h("p", { class: "sectie__uitleg", tekst: zuip
-            ? "Modus Zuipbeker: elke drank geeft de punten die je hier instelt. Vink ‘Telt’ uit voor dranken die niet meetellen."
-            : "Modus Bonnetjes: punten = aantal bonnetjes. Vink ‘Telt’ uit voor dranken zonder punten, zoals water of chips." }),
+          h("p", { class: "sectie__uitleg", tekst: uitlegVoor(modus(), blad) }),
         ),
-        tabel(lijst, zuip),
+        tabel(open, zuip, naam),
       ),
       nieuweDrank(lijst.length, zuip, ctx),
       plakLijst(lijst.length, zuip, ctx),
@@ -40,12 +56,19 @@ export const kaartTab = {
   },
 };
 
-function tabel(lijst, zuip) {
+function uitlegVoor(m, huidig) {
+  const doel = huidig === "eten" ? "de eetbeker" : "de drankbeker";
+  if (m === "zuipbeker") return `Eigen weging: elk item geeft de punten die je hier instelt voor ${doel}. Vink ‘Telt’ uit voor items zonder punten.`;
+  if (m === "consumptie") return `Per consumptie: elk item geeft 1 punt voor ${doel}. Bonnetjes bepalen alleen de prijs. Vink ‘Telt’ uit voor items zonder punten.`;
+  return `Per bonnetje: punten = aantal bonnetjes, voor ${doel}. Vink ‘Telt’ uit voor items zonder punten, zoals water of chips.`;
+}
+
+function tabel(lijst, zuip, naam) {
   const wortel = h("div", { class: `paneel kaarttabel${zuip ? "" : " kaarttabel--zonder-punten"}` },
     h("div", { class: "kaarttabel__kop" }, h("span"), h("span", { tekst: "Naam" }), h("span", { tekst: "Bon." }), h("span", { class: "kaarttabel__punten", tekst: "Punten" }), h("span", { tekst: "Telt" }), h("span")),
   );
 
-  if (!lijst.length) wortel.append(h("p", { class: "notitie", tekst: "Nog geen dranken." }));
+  if (!lijst.length) wortel.append(h("p", { class: "notitie", tekst: `Nog geen ${naam}. Voeg ze hieronder toe.` }));
 
   lijst.forEach((drank, index) => {
     const naam = h("input", { class: "invoer invoer--compact", type: "text", maxlength: 40, value: drank.naam, "aria-label": "Naam" });
@@ -62,7 +85,7 @@ function tabel(lijst, zuip) {
 
     const verplaats = (naarIndex) => {
       const ander = lijst[naarIndex];
-      if (ander) zetVolgorde({ [drank.id]: naarIndex, [ander.id]: index }).catch(meldFout);
+      if (ander) zetVolgorde({ [drank.id]: ander.v ?? naarIndex, [ander.id]: drank.v ?? index }).catch(meldFout);
     };
 
     wortel.append(
@@ -89,7 +112,7 @@ function tabel(lijst, zuip) {
 }
 
 function nieuweDrank(aantal, zuip, ctx) {
-  const naam = h("input", { class: "invoer", type: "text", maxlength: 40, placeholder: "Naam, bv. Duvel", autocomplete: "off", "aria-label": "Naam van de nieuwe drank" });
+  const naam = h("input", { class: "invoer", type: "text", maxlength: 40, placeholder: blad === "eten" ? "Naam, bv. Warme hapjes" : "Naam, bv. Duvel", autocomplete: "off", "aria-label": "Naam van de nieuwe drank" });
   const prijs = h("input", { class: "invoer invoer--getal", type: "number", min: 0, step: 0.5, inputmode: "decimal", value: 1, "aria-label": "Bonnetjes" });
   const punten = h("input", { class: "invoer invoer--getal", type: "number", min: 0, step: 0.5, inputmode: "decimal", value: 1, "aria-label": "Punten" });
 
@@ -98,7 +121,7 @@ function nieuweDrank(aantal, zuip, ctx) {
     if (!tekst) return naam.focus();
     const bon = naarGetal(prijs.value);
     try {
-      await maakDrank({ naam: tekst, prijs: bon, punten: zuip ? naarGetal(punten.value) : bon, telt: true, v: aantal });
+      await maakDrank({ naam: tekst, prijs: bon, punten: zuip ? naarGetal(punten.value) : bon, telt: true, v: aantal, ...(blad === "eten" ? { blad: "eten" } : {}) });
       ctx.herteken();
     } catch (fout) {
       meldFout(fout);
@@ -107,13 +130,12 @@ function nieuweDrank(aantal, zuip, ctx) {
   naam.addEventListener("keydown", (e) => e.key === "Enter" && voegToe());
 
   return h("section", { class: "sectie" },
-    h("div", { class: "sectie__kop" }, h("h2", { class: "sectie__titel", tekst: "Drank toevoegen" })),
+    h("div", { class: "sectie__kop" }, h("h2", { class: "sectie__titel", tekst: blad === "eten" ? "Eten toevoegen" : "Drank toevoegen" })),
     h("div", { class: "paneel formulier" },
       naam,
-      h("div", { class: "rij" },
-        h("label", { class: "veld__label", tekst: "Bonnetjes" }), prijs,
-        zuip && h("label", { class: "veld__label", tekst: "Punten" }),
-        zuip && punten,
+      h("div", { class: "rij rij--onder" },
+        veld("Bonnetjes", prijs),
+        zuip && veld("Punten", punten),
         h("button", { class: "knop knop--primair", type: "button", tekst: "Toevoegen", onclick: voegToe }),
       ),
     ),
@@ -121,10 +143,10 @@ function nieuweDrank(aantal, zuip, ctx) {
 }
 
 function plakLijst(aantal, zuip, ctx) {
-  const vak = h("textarea", { class: "tekstvak", placeholder: zuip ? "Pils;1;1\nDuvel;2;3\nCola;1;0" : "Pils;1\nDuvel;2\nCola;1", "aria-label": "Lijst met dranken" });
+  const vak = h("textarea", { class: "tekstvak", placeholder: blad === "eten" ? (zuip ? "Warme hapjes;3;3" : "Warme hapjes;3\nCroque;2") : zuip ? "Pils;1;1\nDuvel;2;3\nCola;1;0" : "Pils;1\nDuvel;2\nCola;1", "aria-label": "Lijst met dranken" });
 
   return h("details", { class: "paneel uitklap sectie" },
-    h("summary", { class: "uitklap__titel", tekst: "Hele lijst in één keer plakken" }),
+    h("summary", { class: "uitklap__titel", tekst: blad === "eten" ? "Hele eetkaart in één keer plakken" : "Hele lijst in één keer plakken" }),
     h("div", { class: "uitklap__inhoud" },
       h("p", { class: "notitie", tekst: `Eén drank per regel: naam;bonnetjes${zuip ? ";punten" : ""}. Kolommen uit Excel kopiëren werkt ook.` }),
       vak,
@@ -133,11 +155,11 @@ function plakLijst(aantal, zuip, ctx) {
         type: "button",
         tekst: "Toevoegen aan de kaart",
         onclick: async () => {
-          const nieuw = leesKaartLijst(vak.value, { zuipbeker: zuip, startVolgorde: aantal });
+          const nieuw = leesKaartLijst(vak.value, { zuipbeker: zuip, startVolgorde: aantal, blad });
           if (!nieuw.length) return;
           try {
             await importeerDranken(nieuw);
-            toast(`${nieuw.length} ${nieuw.length === 1 ? "drank" : "dranken"} toegevoegd`);
+            toast(`${nieuw.length} ${blad === "eten" ? "gerechten" : nieuw.length === 1 ? "drank" : "dranken"} toegevoegd`);
             ctx.herteken();
           } catch (fout) {
             meldFout(fout);

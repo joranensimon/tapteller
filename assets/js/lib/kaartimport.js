@@ -5,9 +5,9 @@ const naarGetal = (tekst) => Math.max(0, Number(String(tekst ?? "").replace(",",
 /**
  * Regelformaat: naam;bonnetjes[;punten]. Scheiding met ; of tab.
  * @param {string} tekst
- * @param {{ zuipbeker: boolean, startVolgorde: number }} opties
+ * @param {{ zuipbeker: boolean, startVolgorde: number, blad?: "dranken" | "eten" }} opties
  */
-export function leesKaartLijst(tekst, { zuipbeker, startVolgorde = 0 }) {
+export function leesKaartLijst(tekst, { zuipbeker, startVolgorde = 0, blad = "dranken" }) {
   const dranken = [];
 
   for (const regel of String(tekst).split(/\r?\n/)) {
@@ -22,6 +22,7 @@ export function leesKaartLijst(tekst, { zuipbeker, startVolgorde = 0 }) {
       prijs,
       punten,
       telt: zuipbeker ? punten > 0 : true,
+      ...(blad === "eten" ? { blad: "eten" } : {}),
       v: startVolgorde + dranken.length,
     });
   }

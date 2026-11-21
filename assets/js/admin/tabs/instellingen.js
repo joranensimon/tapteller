@@ -9,24 +9,28 @@ import { segment } from "../../componenten/segment.js";
 import { toast } from "../../componenten/toast.js";
 import { veld } from "../../componenten/veld.js";
 import { wijzigInstellingen, wisAlleBestellingen, wisLogo, zetAllePuntenOpNul, zetLogo } from "../../data/schrijven.js";
-import { groepen, modus } from "../selectors.js";
+import { groepen, modus, woorden } from "../selectors.js";
 import { state } from "../state.js";
 import { meldFout } from "../fouten.js";
 
 export const instellingenTab = {
   id: "instellingen",
   label: () => "Instellingen",
+  kort: () => "Opties",
+  icoon: "instellingen",
+  sectie: "beheer",
+  uitleg: () => "Evenement, weging van de punten, beamer, logo en opnieuw beginnen.",
+  breed: true,
   watch: ["instellingen", "groepen"],
   beschermInvoer: true,
 
   render(wortel, ctx) {
     const instellingen = state.instellingen;
     wortel.append(
-      schermLink(),
-      puntentelling(),
-      algemeen(instellingen),
-      logo(instellingen.logo),
-      opnieuwBeginnen(),
+      h("div", { class: "raster-instellingen" },
+        h("div", { class: "raster-instellingen__kolom" }, algemeen(instellingen), puntentelling(), schermOpties(instellingen)),
+        h("div", { class: "raster-instellingen__kolom" }, schermLink(), logo(instellingen.logo), opnieuwBeginnen()),
+      ),
       h("p", { class: "versie", tekst: `${APP.naam} ${APP.versie}` }),
     );
   },
@@ -59,16 +63,58 @@ function schermLink() {
   );
 }
 
+const WEGINGEN = [
+  { waarde: "bonnetjes", label: "Per bonnetje", uitleg: "duurdere dranken tellen zwaarder" },
+  { waarde: "zuipbeker", label: "Eigen weging", uitleg: "jij kiest de punten per drank" },
+  { waarde: "consumptie", label: "Per consumptie", uitleg: "elke consumptie is 1 punt" },
+];
+
 function puntentelling() {
-  return sectie("Hoe tellen de punten?", "Wisselen geldt voor nieuwe bestellingen; punten die al gegeven zijn blijven staan. De punten per drank stel je in bij Drankkaart.",
+  return sectie("Hoe wegen de punten?", "Geldt voor nieuwe bestellingen en voor dranken én eten; punten die al gegeven zijn blijven staan. Bij Eigen weging stel je de punten per item in bij Drankkaart.",
     segment({
       waarde: modus(),
-      opties: [
-        { waarde: "bonnetjes", label: "Bonnetjes", uitleg: "punten = bonnetjes" },
-        { waarde: "zuipbeker", label: "Zuipbeker", uitleg: "eigen punten per drank" },
-      ],
-      bijKeuze: (waarde) => wijzigInstellingen({ modus: waarde }).then(() => toast(`Modus: ${waarde === "zuipbeker" ? "Zuipbeker" : "Bonnetjes"}`)).catch(meldFout),
+      opties: WEGINGEN,
+      bijKeuze: (waarde) => wijzigInstellingen({ modus: waarde }).then(() => toast(`Weging: ${WEGINGEN.find((w) => w.waarde === waarde).label}`)).catch(meldFout),
     }),
+  );
+}
+
+const kiesGetal = (label, waarde, opties, bijKeuze) => {
+  const keuze = h("select", { class: "keuze", "aria-label": label },
+    opties.map(([getal, tekst]) => h("option", { value: getal, selected: getal === waarde, tekst })),
+  );
+  keuze.addEventListener("change", () => bijKeuze(Number(keuze.value)));
+  return veld(label, keuze);
+};
+
+function schermOpties(instellingen) {
+  const w = woorden();
+  const perPagina = Number.isFinite(instellingen.perPagina) ? instellingen.perPagina : 10;
+  const wisselSec = Number.isFinite(instellingen.wisselSec) ? instellingen.wisselSec : 10;
+  const bewaar = (velden, tekst) => wijzigInstellingen(velden).then(() => toast(tekst)).catch(meldFout);
+
+  return sectie("Weergave op de beamer", `Bij veel ${w.meervoud.toLowerCase()} verdeelt de beamer de lijst over pagina’s. Op het scherm kun je zelf doorklikken met de knoppen, een klik op het scherm of de pijltjestoetsen. Met de A-toets of de knop Alles tonen zie je iedereen tegelijk.`,
+    h("div", { class: "paneel formulier" },
+      veld("Weergave", segment({
+        waarde: instellingen.weergave === "grafiek" ? "grafiek" : "lijst",
+        opties: [
+          { waarde: "lijst", label: "Lijst", uitleg: "verspringt bij inhalen" },
+          { waarde: "grafiek", label: "Staven", uitleg: "klassieke meter" },
+        ],
+        bijKeuze: (waarde) => bewaar({ weergave: waarde }, "Weergave aangepast"),
+      })),
+      veld("Wat toont het scherm?", segment({
+        waarde: ["eten", "wissel"].includes(instellingen.beker) ? instellingen.beker : "drank",
+        opties: [
+          { waarde: "drank", label: "Drankbeker" },
+          { waarde: "eten", label: "Eetbeker" },
+          { waarde: "wissel", label: "Wisselend", uitleg: "drank en eten om de beurt" },
+        ],
+        bijKeuze: (waarde) => bewaar({ beker: waarde }, "Scherm aangepast"),
+      })),
+      kiesGetal(`${w.meervoud} per pagina`, perPagina, [[0, "Alles tegelijk"], [5, "5"], [8, "8"], [10, "10"], [12, "12"], [15, "15"], [20, "20"]], (n) => bewaar({ perPagina: n }, "Opgeslagen")),
+      kiesGetal("Automatisch doorbladeren", wisselSec, [[0, "Uit"], [5, "Na 5 seconden"], [8, "Na 8 seconden"], [10, "Na 10 seconden"], [15, "Na 15 seconden"], [20, "Na 20 seconden"], [30, "Na 30 seconden"]], (n) => bewaar({ wisselSec: n }, "Opgeslagen")),
+    ),
   );
 }
 
